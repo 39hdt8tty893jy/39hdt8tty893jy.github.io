@@ -15,7 +15,7 @@
     <meta property="og:image" content=""/>
   
 
-  <link rel="shortcut icon" href="/favicon.png">
+  <link rel="shortcut icon" href="http://cdn.hoorayart.top/blog/favicon.png">
   
   
 <link rel="stylesheet" href="/css/style.css">
@@ -49,42 +49,6 @@
 </header>
   <div id="content" class="inner">
     <div id="main-col" class="alignleft"><div id="wrapper">
-  <article id="post-path_Dijkstra" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/path_Dijkstra/">2023-02-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2023/02/19/path_Dijkstra/">路径算法之三 Dijkstra</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <h1 id="迪杰斯特拉算法-Dijkstra"><a href="#迪杰斯特拉算法-Dijkstra" class="headerlink" title=" 迪杰斯特拉算法 Dijkstra "></a><center> 迪杰斯特拉算法 Dijkstra </center></h1><p>&emsp;&emsp;早年在《三国志英杰传》和 90 年代中后期的火焰纹章系列中就能见到该算法的应用。每当选中友方单位时，会提示该单位的可移动范围，这里只用 BFS 很容易就能做到。但如果该范围会受到地形影响，例如山地或森林会明显减小移动范围，那么 BFS 就显得力不从心了。对比《三国志5》我记忆中都不会有地形影响，部队穿越草地和森林是一样的移动范围。之前介绍的 BFS 和 DFS 都是处理无权图，而 Dijkstra 算法可以处理有权图。大量回合制 SLG 游戏中开始应用 Dijkstra 算法，明显丰富了关卡的设计，提高了可玩性。同时为了保证找到最短路径，算法的贪心策略是选择未被访问且离起点最近的节点，然后根据其邻居节点进行松弛操作，直到找到终点。
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2023/02/19/path_Dijkstra/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
   <article id="post-path_LPAstar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -229,6 +193,42 @@
 
 
 
+  <article id="post-gaussianblur" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/gaussianblur/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2023/02/19/gaussianblur/">高斯模糊</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="高斯模糊的几种常用算法总结"><a href="#高斯模糊的几种常用算法总结" class="headerlink" title=" 高斯模糊的几种常用算法总结 "></a><center> 高斯模糊的几种常用算法总结 </center></h1><p>&emsp;&emsp;高斯模糊是原始图像与正态分布的概率密度函数做卷积运算。因为像素点的分布离散有界，所以通常由正态分布的二维模板作为原始图像的卷积核，其中卷积核必须归一化处理。每个模糊像素值的计算都是周围相邻像素值与滤波模板的卷积。正态分布公式中的标准差 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 决定模糊程度，当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越大，曲线越平滑，权重值分布值越分散，即越模糊；当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越小，曲线越陡峭，权重值分布越集中，模糊程度越小。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2023/02/19/gaussianblur/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-noise" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -308,7 +308,8 @@
   
   
   <div class="clearfix"></div>
-</nav></div></div>
+</nav>
+</div></div>
     <aside id="sidebar" class="alignright">
   <div class="search">
   <form action="//google.com/search" method="get" accept-charset="utf-8">
