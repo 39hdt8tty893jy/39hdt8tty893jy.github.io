@@ -1,0 +1,247 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>特效之一 篝火 | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="篝火 &amp;emsp;&amp;emsp;今天开个特效系列，总结下各种粒子特效，正好 Unity 的 Visual Effect Graph 也刚出来不久，把之前用粒子系统和 shader 制作的特效再用 VEG 实现一遍，也顺便学习学习 VEG。Unity 提供两种做粒子特效的方式，一种为内置的粒子系统，另一种为 Visual Effect Graph 粒子编辑器。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="特效之一 篝火"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-fire&amp;smoke" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/fire&smoke/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">特效之一 篝火</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="篝火"><a href="#篝火" class="headerlink" title=" 篝火 "></a><center> 篝火 </center></h1><p>&emsp;&emsp;今天开个特效系列，总结下各种粒子特效，正好 Unity 的 Visual Effect Graph 也刚出来不久，把之前用粒子系统和 shader 制作的特效再用 VEG 实现一遍，也顺便学习学习 VEG。Unity 提供两种做粒子特效的方式，一种为内置的粒子系统，另一种为 Visual Effect Graph 粒子编辑器。<span id="more"></span>  </p>
+<p><img src="http://cdn.hoorayart.top/blog/img/fire%26smoke/TwoParticleSystems.jpg" alt="两种粒子系统的对比" title="https:&#x2F;&#x2F;docs.unity3d.com&#x2F;Manual&#x2F;ChoosingYourParticleSystem.html"></p>
+<p>&emsp;&emsp;看上去内置的粒子系统比 VEG 弱些，但其实 VEG 能做的，传统的粒子系统也都可以做，只是要额外编写代码。例如 VEG 用 GPU 做粒子模拟可达百万级别，适合复杂的粒子特效，其实我们也可以自己写 shader，让 GPU 去模拟。但如果还涉及物理效果，那么还要在 shader 中去做物理模拟，又多了工作量。而粒子的物理表现放在 CPU 其实更成熟合适。但就方便性和开发效率来说，还是推荐 VEG，很适合策划美术，点点鼠标就能制作。</p>
+<p>&emsp;&emsp;篝火是很简单的特效，也是 VEG 自带的范例之一。回想 2D 游戏中篝火的实现，基本就是序列帧的循环播放。复杂一点的上粒子系统，火焰产生些许变化，显得不那么呆板。3D 游戏中其实也是如此，也是用粒子系统生成多变的火苗，并播放其序列帧动画，再加上一个点光源。如果需求有烟雾，火焰之上添加烟雾的粒子特效即可。另外还可以添加飞出火焰消散的火星粒子和风吹动烟雾等等。总的来说，篝火特效 &#x3D; 火焰粒子 + 点光源 +（烟雾粒子 + 火星粒子 + 风），括号内视需求和性能优化而定。  </p>
+<p>&emsp;&emsp;首先是火焰的粒子特效。上学时就学过酒精灯的火焰分三层区域：内层、中层和外层，即焰心、内焰和外焰。焰心部分，因为没有足够氧气，只有少部分能燃烧，显蓝色，剩下未燃烧的气体形成透明部分，温度最低。內焰是三层次中最明亮的部分，通常也是最大的区域，温度为中。外焰是和空气接触最充分的区域，內焰未能充分燃烧的一氧化碳和碳微粒，绝大多数都在这里充分燃烧，又积累了前面的热量，温度最高，反应最剧烈。但可燃物在外焰迅速耗尽，所以对比內焰，只有较窄一条颜色过渡区，从白光到黄光再到红光。同时外焰既反应剧烈又因为可燃物快速耗尽，相较于稳定的內焰产生了形态上的不规则变化。大部分的火焰都有这种类似的层次结构，太阳这种比较特殊。而火焰的颜色不仅和内外层的温度有关，还和构成不同物质的元素有关，这些元素决定了高温下自己的发出什么光色。所以在做火焰粒子特效时，得保证至少有最亮的內焰和边缘的外焰关系。焰心只有极少部分，而且只有少部分显色，游戏中的特效可以忽略，但如果要又要超写实特写也不能偷懒。像蜡烛、打火机、火把、燃气灶、Flamethrower（以后再触发关键字无法更新，就切到 github 上，太浪费时间排查了）、各种焊枪等等素材都可以仔细观察火焰的形状、结构、运动和颜色。还有如果用动画帧尽量用黑白图来做，便于复用表现不同颜色的火焰。  </p>
+<p>&emsp;&emsp;VEG 的编辑器中主要由 4 部分组成，Spawn、初始化粒子、粒子属性更新和粒子的渲染输出。其中 Spawn 就是粒子发生器系统，后三者为粒子系统。另外比较重要的是 VEG 中的事件，可以触发粒子特效开始和结束，也可以传递事件。Spawn 本身就是事件，连接到粒子系统上即可驱动粒子，同样也可以被其他事件控制，看 Spawn 上面输入的 Start&#x2F;Stop。以后涉及到 GPU 事件和 Mesh 输出系统再作介绍。</p>
+<ul>
+<li>Spawn 粒子发生器主要用于设置产生粒子的频率和延时。和内置粒子系统一样，除了设置恒定速率，也可以转换成 Burst 方式。本来我想着内置粒子系统中设定发生器的形状也是在这里设置，但 VEG 中形状设置却放在初始化粒子中。想来 Spawn 可以复用，且粒子与发生器形状关系更紧密。</li>
+<li>初始化粒子主要设置粒子产生时候的位置、速度、生命周期、大小等等，和内置粒子系统一致。</li>
+<li>粒子属性更新主要是更新粒子生命周期中各种属性，包括速度、角度、大小、缩放、序列帧动画等等，也可以做物理更新，如重力、风力、湍流等等。</li>
+<li>粒子渲染输出可以设置粒子的面朝方向、贴图、颜色、渲染模式等等，很多在粒子属性更新中的设置也可以用在这里。</li>
+</ul>
+<p>&emsp;&emsp;首先是一个火苗的序列帧动画，其中粒子总数可由发射频率和生命周期决定，粒子位置可以有些随机偏移作为变化。随后的 Update 中只用更新序列帧即可，这里由 Flipbook Player 设定播放帧率。下面详细说下粒子渲染输出的配置：</p>
+<ul>
+<li>首先是帧动画播放，所以 UV Mode 设置为 Flipbook Blend。</li>
+<li>Color Mapping 可以做一个梯度映射，让边缘（半透明）到核心（不透明）呈现红–黄–白的过渡。</li>
+<li>Soft Particle 可以不用，这个主要是让粒子和不透明物体接触时有个模糊过渡。因为火焰通常会配合点光源，后期做 BLOOM 自然会有模糊。</li>
+<li>Flipbook Layout 设置 Texture2D 即可，Texture2D Array 主要优化多个贴图 Bind Texture的，这里用不到。</li>
+<li>Main Texture 即为序列帧动画贴图，配置 Flip Book Size 切片，由于 Update 中有播放帧数配置，设置好后便会自动播放。</li>
+<li>Alpha Clipping 即 shader 中的 clip 函数，看需求使用。</li>
+<li>保证粒子是正对相机渲染，不然换个角度就看不见了，即需要设置 Orient: Face Camera Plane。</li>
+<li>因为每个火苗粒子有扩张消散的效果，所以添加了一个 Set Size over Life 的渐变效果，出生时小，消亡时大点。</li>
+<li>Set Scale.Y 调整了下 Y 轴的缩放，让火苗显得更高，默认的 Quad 为正方形，会把细长的火苗压缩。这里也可以在初始化粒子中设置。</li>
+<li>Set Pivot.Y 调整了粒子贴图的锚点，因为默认在中心点，所以调高了些。</li>
+<li>Set Color over Life 设置了粒子在生命周期中的颜色和透明度渐变。</li>
+</ul>
+<p><img src="http://cdn.hoorayart.top/blog/img/fire%26smoke/flame_setting.png"><center>火焰粒子特效设置</center></p>
+<div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/01_flame.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/01_flame.mp4" type="video/mp4">
+</videos>
+</div>
+
+<p>&emsp;&emsp;然后是火星的设置，和火焰的粒子有几个不同点。粒子发生器改成了随机循环 Single Burst，点击 Spawn System 时，Inspector 面板即可修改其配置。Loop Duration 为 burst 的时间间隔。初始化粒子中，除了设置粒子生命周期外，还需要设置初速度，火星主要向上空飞，所以速度 Y 轴上最大，XZ 轴稍稍有点随机偏移即可。另外需要缩小 scale.X，因为默认为 Quad 为正方形，Sparkle 粒子是带拖尾的细长粒子。Update 更新粒子时，用到了湍流 Turbulence 节点，非常棒的流体模拟。流体力学不懂，只设置强度 Intensity、拉拽强度 Drag 和频率 Frequency，就能很简单调出各种好看的湍流效果。火星的渲染输出和火焰大同小异，因为火星随机飞四面八方，所以面向的方向设置为 Along Velocity 沿速度方向。然后根据速度大小，拉升 Y 轴方向的长度。最后是随生命周期的色彩变化过渡。由于火星既小，也转瞬即逝，可以节约掉梯度映射。<br><img src="http://cdn.hoorayart.top/blog/img/fire%26smoke/sparkle_setting.png"><center>火星特效设置，还添加了点光源和一圈石块</center>  </p>
+<div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/02_spark.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/02_spark.mp4" type="video/mp4">
+</videos>
+</div>
+
+<p>&emsp;&emsp;最后是烟雾特效。烟雾的粒子设置和火焰类似，也是序列帧动画的播放。主要区别在初始化粒子时，设置一个随机旋转角度和法线贴图。因为烟雾是可以被光源照亮的，所以这里需要发现贴图模拟出光照效果。还有，渲染输出的设置需要带 Lit 的节点才有法线贴图的选项，Base Color Map 只用 Alpha 即可。烟雾消散速度是逐渐减慢的，所以可以在 Update 中 Flipbook Player 设置递减曲线。<br><img src="http://cdn.hoorayart.top/blog/img/fire%26smoke/smoke_setting.png"><center>烟雾特效设置</center> </p>
+<div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/03_smoke.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/03_smoke.mp4" type="video/mp4">
+</videos>
+</div>
+
+<p>&emsp;&emsp;优化：选中 Output 节点，在 Inspector 中 Transparent Render 设置为低分辨率渲染可以减少 overdraw，节省性能。另外一定要优化粒子效果的表现，想办法既减少粒子又保证效果。比如我之前烟雾的产生频率为 12，存在明显的 overdraw。如果和粒子总数减少一半后，烟雾明显稀疏变薄了。这时对 Set Size over Life 适当放大些，调整后烟雾又恢复了点厚度。输出时还可以用八边形 Octagon，减少些边角的无效像素混合。<br> <div><br><video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/default.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/default.mp4" type="video/mp4"><br></videos></p>
+</div>
+<div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/op.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/op.mp4" type="video/mp4">
+</videos>
+</div>
+<p><center>颜色越暖偏红，说明 overdraw 越多</center></p> 
+
+ <div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/05_final.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire%26smoke/05_final.mp4" type="video/mp4">
+</videos>
+</div>
+<p><center>最后左后方添加了平行光，烟雾加上了一丢丢风力</center></p> 
+
+<p>&emsp;&emsp;还补充一点，烟雾因为可以反射光照，也可以透过光。需要在烟雾的渲染输出中设置 Diffusion Profile 和 Material Type 为 Translucent，这样围着烟雾观察一周，才能有正确光照渲染。   </p>
+<p>&emsp;&emsp;上面简单的篝火特效，其实还可以增加各种随机属性，还可以添加 Distortion，点光源范围还可以产生轻微伸缩等等。再补充点，粒子特效单独看一回事，应用到场景中又是另一回事，后处理之后又有不同的感觉，需要花时间调整优化。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a>, <a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

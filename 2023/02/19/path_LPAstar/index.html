@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>路径算法之六 Lifelong Planning A* | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="Lifelong Planning A* 搜索算法 &amp;emsp;&amp;emsp;Bioware 的无限引擎 Infinity Engine 在 2000 年前后制作过几款经典 2D RPG（博德之门&amp;#x2F;冰风谷&amp;#x2F;异域镇魂曲），但游戏时无一例外地在寻路上存在一个明显的问题。每次以鼠标右键控制角色移动时会开始寻路，随后角色按照路径移动。但这时地图道路狭窄，同时其他同伴或者 NPC 或者怪物也会移动，如果挡住了前进的路，角色会停下来试图保持原路径挤过去，努力扭了大概 2、3 秒后还是处在原地就会重新寻路。这样偶尔就会发现其中某个角色不知不觉就绕了大半圈，而原来的路径早已经通畅可行。大概原因就是没有动态寻路，只是等一段时间后发现还杵在原地再做寻路。如果游戏中应用 A* 算法，那么路径中出现阻碍或者有新的路径成本，只能重新再做一遍 A* 搜索。因为地图上的变动通常只影响小部分的节点，之前的搜索时建立了大量的节点信息，如果重新做一遍 A* 很浪费资源。节点变动如果还频繁，多次重新 A* 寻路浪费更大。Lifelong Planning A* 就是依赖于之前已经做过的搜索信息再寻路。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="路径算法之六 Lifelong Planning A*"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-path_LPAstar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_LPAstar/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">路径算法之六 Lifelong Planning A*</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="Lifelong-Planning-A-搜索算法"><a href="#Lifelong-Planning-A-搜索算法" class="headerlink" title=" Lifelong Planning A* 搜索算法 "></a><center> Lifelong Planning A* 搜索算法 </center></h1><p>&emsp;&emsp;Bioware 的无限引擎 Infinity Engine 在 2000 年前后制作过几款经典 2D RPG（博德之门&#x2F;冰风谷&#x2F;异域镇魂曲），但游戏时无一例外地在寻路上存在一个明显的问题。每次以鼠标右键控制角色移动时会开始寻路，随后角色按照路径移动。但这时地图道路狭窄，同时其他同伴或者 NPC 或者怪物也会移动，如果挡住了前进的路，角色会停下来试图保持原路径挤过去，努力扭了大概 2、3 秒后还是处在原地就会重新寻路。这样偶尔就会发现其中某个角色不知不觉就绕了大半圈，而原来的路径早已经通畅可行。大概原因就是没有动态寻路，只是等一段时间后发现还杵在原地再做寻路。如果游戏中应用 A* 算法，那么路径中出现阻碍或者有新的路径成本，只能重新再做一遍 A* 搜索。因为地图上的变动通常只影响小部分的节点，之前的搜索时建立了大量的节点信息，如果重新做一遍 A* 很浪费资源。节点变动如果还频繁，多次重新 A* 寻路浪费更大。Lifelong Planning A* 就是依赖于之前已经做过的搜索信息再寻路。<span id="more"></span>  </p>
+<p>&emsp;&emsp;同 A* 一样，贪心策略设为 f &#x3D; g* + h，只是 A* 是静态搜索，所以 g 是确定的。而 LPA* 是动态搜索，g 会随着节点的改变而改变，所以这里用 g* 表示。实际算法中 LPA* 第一次搜索和 A* 一致。后续如果有节点变动，会利用先前搜索建立的信息，修改变动节点的后续节点。LPA* 还是维护了不稳定的 g 值，另外引入 rhs 来检验 g 值是否真的是路径最小值。<br><img src="http://cdn.hoorayart.top/blog/img/pathsearching/LPAstar/rhs.png#pic_center" title="截取自 LPA* 作者论文"><center>pred(s) 为所有 s 的前驱邻居节点</center></p>
+<p>&emsp;&emsp;g 和 rhs 有如下关系：</p>
+<ul>
+<li>g(s) &#x3D; rhs(s)：局部一致（Locally Consistent）。说明当访问到该节点时为起点到 s 为最小路径成本。</li>
+<li>g(s) &gt; rhs(s)：局部过一致（Locally Overconsistent）。说明有通过更小的路径成本到达 s，这时需要令 g(s) &#x3D; rhs(s)。因为 g(s) 的改变，那么需要更新节点 s 的后继邻居即可。</li>
+<li>g(s) &lt; rhs(s)：局部欠一致(Locally Underconsistent)。说明 s 的前驱节点要么出现路障，要么路径上权重增大，需要更大成本达到该节点。这时节点便不可信，故令 g &#x3D; ∞，重新更新该节点及后续邻居节点。因为搜索时选取最小 f 和 g 的特点，所以后续搜索会依次把所影响的节点全部再选出来，并且将 g &#x3D; ∞。随后又和 A* 步骤相同了。（更新节点这里可以优化，既移除又添加相同节点，只需要修改其值即可，作者后文有提到）</li>
+</ul>
+<p><img src="http://cdn.hoorayart.top/blog/img/pathsearching/LPAstar/step1.png#pic_center" title="截取自 LPA* 作者论文"><center>第一次和 A* 基本一致</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/pathsearching/LPAstar/step2.png#pic_center" title="截取自 LPA* 作者论文"><center>后续搜索首先清除了局部欠一致的节点，后面步骤和 A* 基本一致</center></p>
+<p>&emsp;&emsp;下面是 LPA* 算法的伪代码：<br><img src="http://cdn.hoorayart.top/blog/img/pathsearching/LPAstar/pseudocode.png#pic_center" title="截取自 LPA* 作者论文"></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/pathsearching/LPAstar/LPAstar.gif#pic_center" title="LPA*"></p>
+<p>&emsp;&emsp;A* 维护了 openlist 和  closelist 避免找出起点到各点的最短路径节点再次被访问，而 LPA* 通过判断局部一致性来避免。A* 通过最小 f 值来选取节点，而 LPA* 首先考虑 f 值，如果 f 值相同，再取其中最小 g 值的节点，这样也能保证从 openlist 中选择出之前节点权重变化后影响的后续节点。  </p>
+<p>&emsp;&emsp;这里说明下 g 值是不稳定的，只会在 openlist 中选到节点时才通过 rhs 做更新。每当节点权重变化或障碍物只影响该节点的后续路径，之前的节点会保持局部一致，不需要重新构建 A* 搜索，这就是 LPA* 对比 A* 的优势。  </p>
+<p>&emsp;&emsp;对于 LPA* 的性能来说，因为要去访问 rhs，所以第一次搜索会低于 A*，但移动过程中有节点权重变化或者有新的障碍物，这时重建路径的效率就比 A* 高了。Lifelong Planning A* 作者在论文中给出了自己的几条优化小措施，如果要应用 LPA* 一定要看。  </p>
+<p>&emsp;&emsp;Lifelong Planning A* 的问题起点到终点是固定的，所以才能应用之前 A* 的搜索信息。如果多源或者目标移动，且内存和 A* 一样消耗很大，游戏中也不太适合该算法，优化后比如减少地图节点且极少寻路需求可以考虑使用。下面一篇将介绍 D* 和 D*-Lite。  </p>
+<p>&emsp;&emsp;参考文章:<br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.cs.cmu.edu/~maxim/files/aij04.pdf">Lifelong Planning A*</a>  </p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a>, <a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

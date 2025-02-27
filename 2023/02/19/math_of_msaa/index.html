@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Anti-Aliasing 抗锯齿之一 | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="抗锯齿之 MSAA &amp;emsp;&amp;emsp;锯齿产生的原因是本来连续的信号，不管是几何图形、阴影还是光照着色，因为设备限制，只能通过离散信号采样来处理。所以要么提高采样性能（采样频率&amp;#x2F;采样精度），用更多更准确的离散信号重构连续信号，如换到 4k 渲染，显示设备更新到 4k；要么一些特殊采样技术来“平滑”信号曲线。下面总结常见的几种 Anti-Aliasing 抗锯齿。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Anti-Aliasing 抗锯齿之一"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-math_of_msaa" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/math_of_msaa/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">Anti-Aliasing 抗锯齿之一</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="抗锯齿之-MSAA"><a href="#抗锯齿之-MSAA" class="headerlink" title=" 抗锯齿之 MSAA "></a><center> 抗锯齿之 MSAA </center></h1><p>&emsp;&emsp;锯齿产生的原因是本来连续的信号，不管是几何图形、阴影还是光照着色，因为设备限制，只能通过离散信号采样来处理。所以要么提高采样性能（采样频率&#x2F;采样精度），用更多更准确的离散信号重构连续信号，如换到 4k 渲染，显示设备更新到 4k；要么一些特殊采样技术来“平滑”信号曲线。下面总结常见的几种 Anti-Aliasing 抗锯齿。<span id="more"></span></p>
+<p>&emsp;&emsp;采样滤波理论主要分为两部分，对连续信号的离散采样和通过采样的离散信号滤波重构原始信号。采样无非就是频率和精度，受限于尼奎斯特极限和硬件机能，没多大的冗余调整。重构时有多种采样模式配合滤波器应用，如 box、tent、sinc(<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mi>i</mi><mi>n</mi><mi>c</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><mi>s</mi><mi>i</mi><mi>n</mi><mo stretchy="false">(</mo><mi>π</mi><mi>x</mi><mo stretchy="false">)</mo></mrow><mrow><mi>π</mi><mi>x</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">sinc(x)=\frac{sin(\pi x)}{\pi x}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mord mathnormal">in</span><span class="mord mathnormal">c</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.355em;vertical-align:-0.345em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.01em;"><span style="top:-2.655em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="mord mathnormal mtight">x</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.485em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight">in</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">π</span><span class="mord mathnormal mtight">x</span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.345em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span>) 和 gaussian 等低通滤波器。</p>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/filter.png"><center>图片截取自《Real-Time Rendering 4th Edition》</center></p>
+<p>&emsp;&emsp;上图以不同采样模式来重构信号时有不同的表现，次级采样点越多效果越好，但也更消耗性能。相同数量的次级采样点，也有不同的效果，比如 2×2 RGSS 就比 2×2 grid 能更好的应对斜线的情况。游戏中常见的如 MSAA 2x&#x2F;4x&#x2F;8x 就是指次级采样点数量，而采样模式硬件厂商有默认的内置实现，现在还支持自定义采样模式。</p>
+<ul>
+<li><p>FSAA（FullScene AA）：如上述，简单地提高离散信号的采样频率，即可缓和锯齿问题，这类方式也叫做 SuperSampling AA。场景以更高分辨率渲染，最后滤波采样缩小到原始尺寸。例如可以把原始 1k 分辨率渲染到 4k Buffer 上，再用 2×2 grid 的 box 滤波缩小回 1k。空间换时间的优化，可以通过硬件加速的 Accumulation Buffer，按 2×2 grid 分离出 4 张坐标偏移的渲染图，不过 Opengl 3.0 已经标识弃用了。FSAA 实现简单效果棒，可以同时应对几何锯齿和着色锯齿，但成本太高了。NV GTX 9 系列推出过 DSR 就是这种思路，最后重构还用了 13 阶高斯滤波，有点吓人。</p>
+</li>
+<li><p>MSAA：借用了 SuperSampling 思路，一般不会提高信号采样频率，但解析重构时仍会使用多个次级采样，而次级采样点不用单独着色，通过三角形覆盖测试的便共享像素中心点的着色计算。如果不在三角形内部，通过基于 GPU 的 <a target="_blank" rel="noopener" href="https://www.opengl.org/pipeline/article/vol003_6/">Center Sampling 或 Centroid Sampling</a> 偏移采样。同时还要做深度测试，<a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-rasterizer-stage-rules">DX 文档中有详细介绍</a>。这样可以大量减少着色计算，相比 FSAA 性能提升不少。NV 和 AMD 又各自推出了 CSAA 和 EQAA，不用存储所有次级采样点的颜色和深度，大多数场景很少有像素点的不同着色的次级像素点在 3 个以上，所以如 EQAA 只存 2 个颜色深度信息来节约显存，次级采样点保存索引即可。MSAA 性能比 FSAA 好，效果也还不错，但只处理几何锯齿，不能处理着色锯齿。同时占用了较大的显存和带宽（借用 SuperSampling 思路，所以缓冲大小以次级采样点计算）。尤其是延迟渲染中，GBuffer 已经够大了，还得加压显存和带宽，所以像 Unity&#x2F;UE 都不支持延迟渲染中应用 MSAA。<a target="_blank" rel="noopener" href="https://docs.nvidia.com/gameworks/content/gameworkslibrary/graphicssamples/d3d_samples/antialiaseddeferredrendering.htm">也有在延迟渲染中实现 MSAA 的，如 DX11 给出的示例</a>。不同硬件厂商对 MSAA 实现有差异，有些还支持自定义 Shader 解析采样。另外图像后处理可能会放大锯齿，如 HDR。解决方式需要提前做 tone-mapping，滤波采样后再 tone-mapping 还原，有点恶心。移动端的 MSAA 有 on-chip 加速，所以还算是高效的抗锯齿方案。</p>
+</li>
+</ul>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/msaa.png"><center>上图截取自《Real-Time Rendering 4th Edition》</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/msaa_origin.png"><center>未做抗锯齿</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/msaa_2x.png"><center>MSAA 2X</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/msaa_4x.png"><center>MSAA 4X</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/msaa_8x.png"><center>MSAA 8X</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/msaa.gif"><center>圆柱体的一角</center></p>
+<p>&emsp;&emsp;参考文章:<br>&emsp;&emsp;《Real-Time Rendering Fourth Edition》<br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf">OpenGL specs</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.nvidia.com/en-gb/geforce/technologies/dsr/technology/">nvidia dsr</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://diglib.eg.org/bitstream/handle/10.2312/egs20201008/021-024.pdf">DX11 MSAA in deferred rendering</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://diglib.eg.org/bitstream/handle/10.2312/egs20201008/021-024.pdf">MSAA in deferred rendering</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://dl.acm.org/doi/abs/10.1145/1572769.1572789">DAEAA</a>  </p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a>, <a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

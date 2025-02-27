@@ -1,0 +1,513 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper">
+  <article id="post-gaussianblur" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/gaussianblur/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/gaussianblur/">高斯模糊</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="高斯模糊的几种常用算法总结"><a href="#高斯模糊的几种常用算法总结" class="headerlink" title=" 高斯模糊的几种常用算法总结 "></a><center> 高斯模糊的几种常用算法总结 </center></h1><p>&emsp;&emsp;高斯模糊是原始图像与正态分布的概率密度函数做卷积运算。因为像素点的分布离散有界，所以通常由正态分布的二维模板作为原始图像的卷积核，其中卷积核必须归一化处理。每个模糊像素值的计算都是周围相邻像素值与滤波模板的卷积。正态分布公式中的标准差 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 决定模糊程度，当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越大，曲线越平滑，权重值分布值越分散，即越模糊；当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越小，曲线越陡峭，权重值分布越集中，模糊程度越小。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/gaussianblur/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-fire" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/fire/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/fire/">特效之三 火焰</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="火焰"><a href="#火焰" class="headerlink" title=" 火焰 "></a><center> 火焰 </center></h1><p>&emsp;&emsp;火焰是游戏中最常用的特效之一，不同形态，不同颜色，不同风格在游戏中有不同表现，既可以做蜡烛、火把、篝火取暖照明，也可以做火球、火墙等等法术，还可以做 Flamethrower（以后再触发关键字无法更新，就切到 github 上，太浪费时间排查了）、机关陷阱等等装置。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/fire/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-holographic" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/holographic/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/holographic/">特效之四 全息影像</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="全息影像"><a href="#全息影像" class="headerlink" title=" 全息影像 "></a><center> 全息影像 </center></h1><p>&emsp;&emsp;最近试用期的 win7 免费转正 win10，升级完后 Cortana 一出现就想到了《光环》中的女主科塔娜，毕竟还是有点情怀所以 win10 上第一篇博客先搞个全息图像的特效。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/holographic/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-math_for_games" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/math_for_games/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/math_for_games/">游戏开发中的数学基础</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="数学基础之图形"><a href="#数学基础之图形" class="headerlink" title=" 数学基础之图形 "></a><center> 数学基础之图形 </center></h1><p>&emsp;&emsp;写 shader 时偶尔会去查找以前图形学中既熟悉又陌生的数学知识。所以对游戏中的基础数学部分做个总结，重读一些基础书籍，摘抄记录些容易忘记的部分，好记性不如烂笔头，也算朝花夕拾了。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/math_for_games/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-math_of_fxaa" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/math_of_fxaa/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/math_of_fxaa/">Anti-Aliasing 抗锯齿之二</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="抗锯齿之-FXAA-和-SMAA"><a href="#抗锯齿之-FXAA-和-SMAA" class="headerlink" title=" 抗锯齿之 FXAA 和 SMAA "></a><center> 抗锯齿之 FXAA 和 SMAA </center></h1><p>&emsp;&emsp;前文主要介绍基于几何图形的抗锯齿 MSAA，而锯齿发生不仅在几何图形边缘，也在阴影和高光之类的边界。而基于图像后处理的抗锯齿可以提供更完善的抗锯齿效果，同时还能独立于管线，更灵活。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/math_of_fxaa/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-math_of_smoothstep" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/math_of_smoothstep/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/math_of_smoothstep/">平滑插值函数 Smoothstep</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="数学基础之平滑插值函数"><a href="#数学基础之平滑插值函数" class="headerlink" title=" 数学基础之平滑插值函数 "></a><center> 数学基础之平滑插值函数 </center></h1><p>&emsp;&emsp;在噪声一文中用到了平滑插值 Smoothstep，该函数在很多地方都有应用，动画曲线、颜色过渡、抗锯齿中经常能见到其身影。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/math_of_smoothstep/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-math_of_msaa" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/math_of_msaa/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/math_of_msaa/">Anti-Aliasing 抗锯齿之一</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="抗锯齿之-MSAA"><a href="#抗锯齿之-MSAA" class="headerlink" title=" 抗锯齿之 MSAA "></a><center> 抗锯齿之 MSAA </center></h1><p>&emsp;&emsp;锯齿产生的原因是本来连续的信号，不管是几何图形、阴影还是光照着色，因为设备限制，只能通过离散信号采样来处理。所以要么提高采样性能（采样频率&#x2F;采样精度），用更多更准确的离散信号重构连续信号，如换到 4k 渲染，显示设备更新到 4k；要么一些特殊采样技术来“平滑”信号曲线。下面总结常见的几种 Anti-Aliasing 抗锯齿。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/math_of_msaa/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-path_Astar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_Astar/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/path_Astar/">路径算法之五 A*</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="A-搜索算法"><a href="#A-搜索算法" class="headerlink" title=" A* 搜索算法 "></a><center> A* 搜索算法 </center></h1><p>&emsp;&emsp;通过前文可以清楚了解，Dijkstra 算法的贪心策略是每次找出离起点最近的节点，优点在于能找到最优路径且能处理权重图，但是速度慢；Best-First searching 的贪心策略是每次找出离终点最近的节点，优点在于更快向终点靠近，搜索效率上去了但不是最优路径。二者取其长便是经典的 A* 算法。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/path_Astar/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-path_BestFirst" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_BestFirst/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/path_BestFirst/">路径算法之四 Best-First Searching</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="最佳优先搜索"><a href="#最佳优先搜索" class="headerlink" title=" 最佳优先搜索 "></a><center> 最佳优先搜索 </center></h1><p>&emsp;&emsp;上一篇讲到 Dijkstra 算法，在搜索中的贪心策略是每次访问 openlist 中离起点最近的节点并松弛，这样可以保证起点到各节点的路径权重值最小。那么如果贪心策略用的是终点信息呢？每次访问从 openlist 中访问离终点最近的节点便是最佳优先搜索 Best-First Searching。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/path_BestFirst/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-path_Dijkstra" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_Dijkstra/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/blog/2023/02/19/path_Dijkstra/">路径算法之三 Dijkstra</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="迪杰斯特拉算法-Dijkstra"><a href="#迪杰斯特拉算法-Dijkstra" class="headerlink" title=" 迪杰斯特拉算法 Dijkstra "></a><center> 迪杰斯特拉算法 Dijkstra </center></h1><p>&emsp;&emsp;早年在《三国志英杰传》和 90 年代中后期的火焰纹章系列中就能见到该算法的应用。每当选中友方单位时，会提示该单位的可移动范围，这里只用 BFS 很容易就能做到。但如果该范围会受到地形影响，例如山地或森林会明显减小移动范围，那么 BFS 就显得力不从心了。对比《三国志5》我记忆中都不会有地形影响，部队穿越草地和森林是一样的移动范围。之前介绍的 BFS 和 DFS 都是处理无权图，而 Dijkstra 算法可以处理有权图。大量回合制 SLG 游戏中开始应用 Dijkstra 算法，明显丰富了关卡的设计，提高了可玩性。同时为了保证找到最短路径，算法的贪心策略是选择未被访问且离起点最近的节点，然后根据其邻居节点进行松弛操作，直到找到终点。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/blog/2023/02/19/path_Dijkstra/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+
+<nav id="pagination">
+  
+  
+    <a href="/blog/page/2/" class="alignright next">Next</a>
+  
+  <div class="clearfix"></div>
+</nav></div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

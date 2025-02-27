@@ -1,0 +1,248 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Anti-Aliasing 抗锯齿之二 | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="抗锯齿之 FXAA 和 SMAA &amp;emsp;&amp;emsp;前文主要介绍基于几何图形的抗锯齿 MSAA，而锯齿发生不仅在几何图形边缘，也在阴影和高光之类的边界。而基于图像后处理的抗锯齿可以提供更完善的抗锯齿效果，同时还能独立于管线，更灵活。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Anti-Aliasing 抗锯齿之二"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-math_of_fxaa" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/math_of_fxaa/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">Anti-Aliasing 抗锯齿之二</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="抗锯齿之-FXAA-和-SMAA"><a href="#抗锯齿之-FXAA-和-SMAA" class="headerlink" title=" 抗锯齿之 FXAA 和 SMAA "></a><center> 抗锯齿之 FXAA 和 SMAA </center></h1><p>&emsp;&emsp;前文主要介绍基于几何图形的抗锯齿 MSAA，而锯齿发生不仅在几何图形边缘，也在阴影和高光之类的边界。而基于图像后处理的抗锯齿可以提供更完善的抗锯齿效果，同时还能独立于管线，更灵活。<span id="more"></span></p>
+<p>&emsp;&emsp;基于图像处理的抗锯齿把重点放在边界上，通过图像后处理来检测边缘，再对边缘做滤波。该技术发展也很广泛，比如基于法线深度的 SRAA，但只能针对几何边界；基于分析方法的 GBAA 和 DEAA（类似 SDF）；基于 color buffer 的 DLAA。缺点：基于图像边界检测的缺点都存在，检测失败丢失边界，不该存在边界的出现边界，曲线和直线边界差异等等。好处是：相对于之前的抗锯齿，有较好的性能和较少的资源占用，像基于 color buffer 的能很好地和渲染管线解耦合，方便应用于延迟渲染。应用 non-linear RGB color 可以避免 MSAA 在 HDR 中 tone-mapping 的问题。  </p>
+<ul>
+<li>MLAA（Morphological AA）：最早在 Intel Labs 上由 Alexander Reshetov 发布的文章，当时由 CPU 实现。后来《GPU Pro 2》中 <a target="_blank" rel="noopener" href="http://giga.cps.unizar.es/~diegog/ficheros/pdf_papers/JimenezMLAA.pdf">Jimenez 实现的 MLAA</a> 算法在 GPU 上有不错的性能和效果。该算法分需要 3 个 pass：第 1 个 pass 边界检测；第 2 个 pass 通过匹配模式计算混合因子；第 3 个 pass 混合着色。<br><img src="http://cdn.hoorayart.top/blog/img/aa/mlaa.gif"><center>上图截取自《GPU Pro 2》</center><br> &emsp;&emsp;MLAA 一共分为 5 步：<ol>
+<li><p>边缘检测：以亮度值计算，通常取 0.1 为阈值，用上下左右 4 个像素判断边界（从这里就能看出曲线效果会差些）。边缘分为水平方向和垂直方向两种，当确定是边界时，用 R 通道保存左侧边界，G 通道保存上侧边界，所以图中黄色即同时为占用 RG 两种边界。其实还可以配合深度法线计算更准确，但开销也更高。边界检测如果只是基于深度，那像两平面重叠就会丢失边界，所以一般基于亮度检测。  </p>
+</li>
+<li><p>确定边界线段：对上述生成的边缘图利用双线性采样，向两端搜索，返回 3 种结果：0 是两个像素未包含边界；1 是两像素都包含边界；0.5 是其中一个像素包含边界，这时就得到端点。这步也很耗时，要多次采样，为了兼顾质量和性能，边界长度最大长度可以设置 [8, 12] 个像素之间。当得到边界端点时，还要确定端点处不同边界形状，称为 crossing edges。<br><img src="http://cdn.hoorayart.top/blog/img/aa/mlaa_distance.gif"><center>图片截取自《GPU Pro 2》寻找边界</center><br><img src="http://cdn.hoorayart.top/blog/img/aa/mlaa_edge_shape.gif"><center>图片截取自《GPU Pro 2》判断边界端点的交叉边界</center></p>
+</li>
+<li><p>以两端为线段像素矢量化：根据边界线段的形状，可以得到不同的边界矢量化，包括水平方向和垂直方向的边界。<br><img src="http://cdn.hoorayart.top/blog/img/aa/mlaa_all_shape.gif"><center>图片截取自 Alexander Reshetov 实现的 MLAA</center></p>
+</li>
+<li><p>根据像素矢量化的面积计算混合因子：可以通过提前预计算的面积图得到混合因子。<br><img src="http://cdn.hoorayart.top/blog/img/aa/mlaa_precomputed.png"><center>图片截取自《GPU Pro 2》</center></p>
+</li>
+<li><p>最后根据混合因子着色：</p>
+</li>
+</ol>
+ <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>C</mi><mrow><mi>n</mi><mi>e</mi><mi>w</mi></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>a</mi><mo stretchy="false">)</mo><mo>⋅</mo><msub><mi>C</mi><mrow><mi>o</mi><mi>l</mi><mi>d</mi></mrow></msub><mo>+</mo><mi>a</mi><mo>⋅</mo><msub><mi>C</mi><mrow><mi>o</mi><mi>p</mi><mi>p</mi></mrow></msub></mrow><annotation encoding="application/x-tex">C_{new} = (1 - a) \cdot C_{old} + a \cdot C_{opp}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">n</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight" style="margin-right:0.02691em;">w</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">a</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4445em;"></span><span class="mord mathnormal">a</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">pp</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span></span></li>
+</ul>
+<p>&emsp;&emsp;MLAA 是相当出色的，在 PC、主机上同品质下抗锯齿性能比 MSAA 更好，场景越复杂差距越大。移动端的 TBR 有 on-chip 硬件优化的 MSAA，MLAA 多 pass 的后处理带宽压力也更大，所以移动端的 MSAA 更优。MLAA 独立于渲染管线，很适用于延迟渲染，也比 MSAA 少了 HDR tone mapping 的问题。理解了 MLAA，代码就不用撸了，因为下面两种 MLAA 的代替方案，一种有更优的性能，一种有更优的质量。</p>
+<ul>
+<li><p>FXAA（Fast-Approximate AA）:基本思路依然是 MLAA。先做边界检测，NV FXAA 白皮书中还用的是上下左右中 5 个像素点的最大亮度 - 最小亮度来判断边界（亮度值可以用公式计算，也可以直接取绿色通道，还可以计算放到 alpha 通道中）。当不是边界直接返回颜色即可；当确定为边界时，判断边界是水平方向还是竖直方向，然后找出线段的两端点，最后根据采样点在边界线段上的位置做插值计算偏移即可。这里可以看出不像 MLAA 去判断线段类型，混合因子不用去计算面积，根据采样点在边界线上的位置做个 uv 偏移即可，所以叫 Fast-Approximate。最早版本的 FXAA 因为不像 MLAA 先检测边缘，而直接找去找边长，所以边界上存在两层像素，做 AA 的时候，实际做了两遍，导致边缘比较厚，模糊发虚。于是后续版本，边缘检测时不仅比较亮度还考虑对比度，还额外扩展了对角线上的 4 个采样点，可以更精确找出边界。找出边界线段后再确定其法线，只做一个方向的 AA。这样 FXAA Quality 效果相对完善了，但每次 AA 都需要大量采样。所以作者还提出了 FXAA Console 版本，不去寻找边界两端点，直接判断边界线的倾斜梯度。但是这样相对于水平或者垂直的情况下效果就不太理想，虽然更高效。我记得以前 Unity 的 FXAA 在后处理中设置，现在的渲染管线单独放在 Camera 中设置，还是要开启后处理，大概是要规避后处理引入问题，尽管文档中有默认的后处理执行顺序。看了一眼 Unity FXAA 的实现代码是基于 FXAA Console 版本。对比像 MSAA 基于几何体，对于电线、网之类的细小像素，可以处理得既实又平滑；而通过图像后处理的 AA 有一个通病，细线的背景色会入侵到线里，这样线虽然也平滑了但却变虚了。FXAA 基本还是参考的 MLAA，但相对于 MLAA 有更好性能，质量也勉强过得去，不依赖于硬件和管线，DX10 Sample 中有该算法演示，所以大量游戏中都有应用。由于只用 1 个 pass，移动端特殊情况下也是可以考虑的。下面可以看出对于曲线部分 Console 版本不输 Quality，而长斜线 Quality 版本更好。(<span id='q01'>遗留问题：现在看场景素材没选高光边缘的锯齿，当时主要为了和前文 MSAA 对比。自己撸的 FXAA Quality 代码还有点乱，优化后添加高光锯齿的素材，包括 MSAA。</span>)<br><img src="http://cdn.hoorayart.top/blog/img/aa/msaa_origin.png"><center>原始未做 AA</center><br><img src="http://cdn.hoorayart.top/blog/img/aa/fxaa_unity.png"><center>FXAA Console 版本</center><br><img src="http://cdn.hoorayart.top/blog/img/aa/fxaa_ray.png"><center>FXAA Quality 版本</center></p>
+</li>
+<li><p>SMAA（Subpixel Morphological AA）:FXAA 虽然资源占用比 MSAA 低，但是效果通常达不到 MSAA。MLAA 和 MSAA 有得一拼，但仍有不足之处，于是 MLAA 作者后续提出了 SMAA。SMAA 依然选择亮度作边缘检测，有 4 种观察原因，MLAA 本就是基于 color（luna 或 rgb）；相比于法线和深度，色彩信息更有效；不仅可以处理几何图形的锯齿，还可以处理着色的锯齿；最后比 rgb color 更快。同 MLAA 还是需要 3 次 pass：边缘检测&#x2F;模式匹配计算混合因子&#x2F;混合。SMAA 论文标题为 Enhanced Subpixel Morphological Antialiasing，所以主要把重点集中在对 MLAA 改进增强上：</p>
+<ol>
+<li>改进了边缘检测：同 FXAA 一样，不仅选择亮度，还选择了对比度，并按边缘方向多扩展了一个采样，可以更好找出边缘。<br><img src="http://cdn.hoorayart.top/blog/img/aa/smaa_edgedetection.png"><center>图片截取自 Jimenez 的 SMAA 论文，红色错误的边检测（左上）导致错误的 AA（中上）和正确的 AA（右上）</center><br></li>
+</ol>
+ <span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msub><mi>e</mi><mi>l</mi></msub></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi mathvariant="normal">∣</mi><mi>L</mi><mo>−</mo><msub><mi>L</mi><mi>l</mi></msub><mi mathvariant="normal">∣</mi><mo>&gt;</mo><mi>T</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msub><mi>C</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>m</mi><mi>a</mi><mi>x</mi><mo stretchy="false">(</mo><msub><mi>C</mi><mi>t</mi></msub><mo separator="true">,</mo><msub><mi>C</mi><mi>r</mi></msub><mo separator="true">,</mo><msub><mi>C</mi><mi>b</mi></msub><mo separator="true">,</mo><msub><mi>C</mi><mi>l</mi></msub><mo separator="true">,</mo><msub><mi>C</mi><mrow><mn>2</mn><mi>l</mi></mrow></msub><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><msubsup><mi>e</mi><mi>l</mi><mo mathvariant="normal" lspace="0em" rspace="0em">′</mo></msubsup></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msub><mi>e</mi><mi>l</mi></msub><mo>∧</mo><msub><mi>C</mi><mi>l</mi></msub><mo>&gt;</mo><mn>0.5</mn><mo>⋅</mo><msub><mi>C</mi><mrow><mi>m</mi><mi>a</mi><mi>x</mi></mrow></msub></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
+  e_l &amp; = | L - L_l| &gt; T \\
+  C_{max} &amp; = max(C_t, C_r, C_b, C_l, C_{2l}) \\
+  e&#x27;_l &amp; = e_l \wedge C_l &gt; 0.5 \cdot C_{max}
+  \end{align*}
+  </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:4.5em;vertical-align:-2em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.5em;"><span style="top:-4.66em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.16em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">ma</span><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.66em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8019em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">′</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.5em;"><span style="top:-4.66em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">∣</span><span class="mord mathnormal">L</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">L</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">∣</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.16em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal">ma</span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">b</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span><span style="top:-1.66em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">∧</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">&gt;</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord">0.5</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">ma</span><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2em;"><span></span></span></span></span></span></span></span></span></span></span></span>
+<p> &emsp;&emsp;上述对于左侧边缘检测的式子中，L 代表亮度，C 代表对比度，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>e</mi><mi>l</mi></msub></mrow><annotation encoding="application/x-tex">e_l</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> 通过了亮度判断，再进行对比度判断。其中还往左侧扩展一位 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mn>2</mn><mi>l</mi></mrow></msub></mrow><annotation encoding="application/x-tex">C_{2l}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">l</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>，避免不必要的边缘出现。</p>
+<ol start="2">
+<li><p>改进了边缘类型匹配：类似直角这种尖锐角落处本来不需要做 AA 的，但仍做了 AA，结果实的边缘变虚了。这类角落处的边缘特点：边缘线两端的交叉边缘（crossing edges）长度比较长，于是可以通过这个特点来确定避免直角处的 AA。而普通做 MLAA 对端点的交叉边缘就只判断了 1 个像素，SMAA 便扩展用 2 个像素判断（其实还可以用 3、 4 个像素等等），这样可以让角保持尖锐，不会糊掉。同时设置个倒角程度 r，用于调整转角处的混合因子，如下图中紫线（r &#x3D; 0）和蓝线（r &#x3D; 1）之间的黄线。另外原来的 MLAA 中，匹配的边缘类型就 L、Z、U 三种，边缘方向分为水平和竖直，会导致 1 个问题：斜线通常由多种不同斜率的微小边缘类型组成，于是斜线变成了折线。SMAA 便增加了对角线模式的判断，而且先做对角线模式匹配，如不通过再做原始的正交匹配。<br><img src="http://cdn.hoorayart.top/blog/img/aa/smaa_cal_edge.png"><center>图片截取自 Jimenez 的 SMAA 论文，橙色边对应于交叉边缘扩展位，红色边为 MLAA 的交叉边缘</center><br><img src="http://cdn.hoorayart.top/blog/img/aa/smaa_blend.png"><center>图片截取自 Jimenez 的 SMAA 论文，混合因子的计算</center><br><img src="http://cdn.hoorayart.top/blog/img/aa/smaa_patterns.png"><center>图片截取自 Jimenez 的 SMAA 论文，同 MLAA 一样，左侧为模式，右侧为预计算面积</center></p>
+</li>
+<li><p>改进边缘长度的搜索：MLAA 边缘线段向两端点搜索时，虽然通过双线性采样，但只能获取两像素的信息，既 1 个维度。所以有时会跳过某些特殊的点，如下图左。于是 SMAA 搜索边缘的采样点 uv 做了一点点偏移，这样可以一次计算 4 个采样点的计算。<br><img src="http://cdn.hoorayart.top/blog/img/aa/smaa_search.png"><center>图片截取自 Jimenez 的 SMAA 论文，左侧为 MLAA 搜索方式，右侧 SMAA 搜索方式</center></p>
+</li>
+</ol>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.25em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>f</mi><mi>x</mi></msub><mo stretchy="false">(</mo><msub><mi>b</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>b</mi><mn>2</mn></msub><mo separator="true">,</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>x</mi><mo>⋅</mo><msub><mi>b</mi><mn>1</mn></msub><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>x</mi><mo stretchy="false">)</mo><mo>⋅</mo><msub><mi>b</mi><mn>2</mn></msub></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><msub><mi>f</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub><mo stretchy="false">(</mo><mi>b</mi><mo separator="true">,</mo><mi>x</mi><mo separator="true">,</mo><mi>y</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msub><mi>f</mi><mi>x</mi></msub><mo stretchy="false">(</mo><msub><mi>b</mi><mn>1</mn></msub><mo separator="true">,</mo><msub><mi>b</mi><mn>2</mn></msub><mo separator="true">,</mo><mi>x</mi><mo stretchy="false">)</mo><mo>⋅</mo><mi>y</mi><mo>+</mo><msub><mi>f</mi><mi>x</mi></msub><mo stretchy="false">(</mo><msub><mi>b</mi><mn>3</mn></msub><mo separator="true">,</mo><msub><mi>b</mi><mn>4</mn></msub><mo separator="true">,</mo><mi>x</mi><mo stretchy="false">)</mo><mo>⋅</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>y</mi><mo stretchy="false">)</mo></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{align*}
+ f_{x}(b_1,b_2,x) &amp; = x \cdot b_1 + (1-x) \cdot b_2 \\
+ f_{xy}(b,x,y) &amp; = f_{x}(b_1,b_2,x) \cdot y + f_{x}(b_3,b_4,x) \cdot (1-y) \\
+ \end{align*}
+ </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:3em;vertical-align:-1.25em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.75em;"><span style="top:-3.91em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">y</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">b</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">x</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.75em;"><span style="top:-3.91em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span><span style="top:-2.41em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1076em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">x</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.25em;"><span></span></span></span></span></span></span></span></span></span></span></span>
+
+<ol start="4">
+<li>改进混合：MLAA 没有次级像素，所以可以结合如 MSAA，来弥补其不足。作者介于性能和效果推荐 4 种组合方式：<ul>
+<li>SMAA 1x：即原始完整的 SMAA。</li>
+<li>SMAA S2x：SMAA 1x + MSAA。</li>
+<li>SMAA T2x：SMAA 1x + TAA。</li>
+<li>SMAA 4x：SMAA 1x + MSAA + TAA。<br><img src="http://cdn.hoorayart.top/blog/img/aa/smaa_addition.png"><center>图片截取自 Jimenez 的 SMAA 论文</center></li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<p><img src="http://cdn.hoorayart.top/blog/img/aa/smaa.png"><center>SMAA 1x</center></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">// SubpixelMorphologicalAntialiasing.hlsl</span><br><span class="line">#if defined(SMAA_PRESET_LOW)</span><br><span class="line">#define SMAA_THRESHOLD 0.15</span><br><span class="line">#define SMAA_MAX_SEARCH_STEPS 4</span><br><span class="line">#define SMAA_DISABLE_DIAG_DETECTION</span><br><span class="line">#define SMAA_DISABLE_CORNER_DETECTION</span><br><span class="line">#elif defined(SMAA_PRESET_MEDIUM)</span><br><span class="line">#define SMAA_THRESHOLD 0.1</span><br><span class="line">#define SMAA_MAX_SEARCH_STEPS 8</span><br><span class="line">#define SMAA_DISABLE_DIAG_DETECTION</span><br><span class="line">#define SMAA_DISABLE_CORNER_DETECTION</span><br><span class="line">#elif defined(SMAA_PRESET_HIGH)</span><br><span class="line">#define SMAA_THRESHOLD 0.1</span><br><span class="line">#define SMAA_MAX_SEARCH_STEPS 16</span><br><span class="line">#define SMAA_MAX_SEARCH_STEPS_DIAG 8</span><br><span class="line">#define SMAA_CORNER_ROUNDING 25</span><br><span class="line">#elif defined(SMAA_PRESET_ULTRA)</span><br><span class="line">#define SMAA_THRESHOLD 0.05</span><br><span class="line">#define SMAA_MAX_SEARCH_STEPS 32</span><br><span class="line">#define SMAA_MAX_SEARCH_STEPS_DIAG 16</span><br><span class="line">#define SMAA_CORNER_ROUNDING 25</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;上述是 Unity SMAA 源码中各档配置，主要在边缘搜索、对角线匹配和尖锐角判断特性上划分。关于亮度补充一点，人们对较暗区域的变化比亮部更敏感，所以上述方法中对亮度的获取，最好在伽马空间中。在 HDR 一篇中有线性空间和伽马空间的介绍。下一篇 TAA，再下一篇补充些显卡厂商主推的抗锯齿，包括 NV DLSS 和 AMD FSR，抗锯齿系列就算完结了。</p>
+<p><span id='q03'>遗留问题：空了研究下 Intel 的 CMAA。同时验证下自己的想法，通过 compute shader 来实现，并优化。</span></p>
+<p>&emsp;&emsp;<a href="#q01">遗留问题01</a>  <a href="#q03">遗留问题03</a>  </p>
+<p>&emsp;&emsp;参考文章:<br>&emsp;&emsp;《Real-Time Rendering Fourth Edition》<br>&emsp;&emsp;<a target="_blank" rel="noopener" href="http://www.iryoku.com/aacourse/">Filtering Approaches for Real-Time Anti-Aliasing</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="http://giga.cps.unizar.es/~diegog/ficheros/pdf_papers/JimenezMLAA.pdf">《GPU Pro 2》中 Jimenez MLAA</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="http://www.cs.cmu.edu/afs/cs/academic/class/15869-f11/www/readings/reshetov09_mlaa.pdf">Reshetov MLAA</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.intel.cn/content/www/cn/zh/developer/articles/technical/conservative-morphological-anti-aliasing-20.html?wapkw=mlaa">CMAA</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.intel.cn/content/www/cn/zh/developer/articles/technical/conservative-morphological-anti-aliasing-cmaa-update.html?wapkw=mlaa">CMAA2.0</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://research.nvidia.com/sites/default/files/pubs/2011-02_Subpixel-Reconstruction-Antialiasing/I3D11.pdf">SRAA</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="http://www.iryoku.com/smaa/downloads/SMAA-Enhanced-Subpixel-Morphological-Antialiasing.pdf">SMAA</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="http://iryoku.com/aacourse/downloads/09-FXAA-3.11-in-15-Slides.pptx">FXAA 3.11</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://catlikecoding.com/unity/tutorials/advanced-rendering/fxaa/">FXAA Smoothing Pixels</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://catlikecoding.com/unity/tutorials/custom-srp/fxaa/">FXAA Fast approXimate Anti-Aliasing</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://developer.download.nvidia.cn/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf">FXAA WhitePaper</a><br>&emsp;&emsp;<a target="_blank" rel="noopener" href="http://blog.simonrodriguez.fr/articles/2016/07/implementing_fxaa.html">Implementing FXAA</a>  </p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a>, <a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

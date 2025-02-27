@@ -1,0 +1,198 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>特效之四 全息影像 | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="全息影像 &amp;emsp;&amp;emsp;最近试用期的 win7 免费转正 win10，升级完后 Cortana 一出现就想到了《光环》中的女主科塔娜，毕竟还是有点情怀所以 win10 上第一篇博客先搞个全息图像的特效。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="特效之四 全息影像"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-holographic" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/holographic/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">特效之四 全息影像</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="全息影像"><a href="#全息影像" class="headerlink" title=" 全息影像 "></a><center> 全息影像 </center></h1><p>&emsp;&emsp;最近试用期的 win7 免费转正 win10，升级完后 Cortana 一出现就想到了《光环》中的女主科塔娜，毕竟还是有点情怀所以 win10 上第一篇博客先搞个全息图像的特效。<span id="more"></span>  </p>
+<p>&emsp;&emsp;全息影像的最大特点是虚，无论是真全息还是伪全息。因为需要对光的精准控制，涉及到设备的精度，投影的介质，环境中其他光线的干扰，可视角度等等。所以不管在现实中还是在影视或游戏中，全息影像几乎一眼就能看出与周围环境的格格不入。当然也有偷懒直接渲染真实模型当全息影像的。这种虚的表现有多种方式，比如成像过程中发生衍射，会产生衍射条纹；设备问题的信号噪声，产生影像的 glitch 闪烁或偏移；光线不足产生半透明效果；增加光强度，影像又自发光了；设备成本限制，色域饱和度等等也比较低。所以特效的制作思路就是衍射条纹 + 闪烁 + 偏移 + 半透明 + 边缘内发光 + 降低色彩表现等等组合。另外投射光线也可能有需求表现出来，就像电影院看电影从放映机后面投射光线束那样。小小地研究了下背投、佩珀尔幻象和透明显示屏几种伪全息还挺有意思的。  </p>
+<div><center>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/img/holographic/movie.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_holographic/holographic.mp4" type="video/mp4">
+</videos>
+</center></div>
+&emsp;&emsp;这个特效很简陋，底座和顶部都没做光源，但主要是实现上面的思路，我还增加了 glitch 频率方便观察。光效扫描的衍射条纹图用 UV 偏移；闪烁频率设置个随机数用 Step 筛选即可；对顶点做随机 sin/cos 偏移表现 Glitch；半透明就用之前的衍射条图即可做 Alpha 通道；边缘内发光可以通过菲涅尔效果做边缘光；色彩表现也很简单，科塔娜偏蓝，所以我也只给了蓝色底色，边缘给了点紫色。投射光线直接用 VEG 中几十个粒子分布圆环形上，指向中心偏上即可。最后尽量把影响表现的变量暴露出来方便调试，我这里没有暴露。  
+
+<p><img src="http://cdn.hoorayart.top/blog/img/holographic/setting.png"></p>
+<p>&emsp;&emsp;2019 年看到 Unity VEG 实例中有两个全息影像的实现，一个实例场景为：EllenHologram；另一个为：SpaceshipHoloTable。前一个是通过 RT 作 20 万粒子分布（除去了多余一只兔子减一半），后一个是通过 Houdini 生成 PointsCache，6 万个粒子分布。还有一个全息实例在 SkinnedMesh 中，11 万个粒子。感觉还是原来写的 shader 更合适，虽说 VEG 用 GPU，但来表现全息影像有点大材小用了，除非有特殊的画面需求。  </p>
+<p>&emsp;&emsp;最近一款游戏给我很深的震撼——《盗贼之海》。倒不是多好玩，而是恐怖的海洋模拟，会持续地刺激着我的深海恐惧，特别是风浪中站在首斜桅杆上。而就算像《深海迷航》在海底探索，我也不觉得有什么。所以决定花长时间不更博客，好好研究一番流体的模拟。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a>, <a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

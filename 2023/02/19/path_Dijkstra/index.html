@@ -1,0 +1,196 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>路径算法之三 Dijkstra | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="迪杰斯特拉算法 Dijkstra &amp;emsp;&amp;emsp;早年在《三国志英杰传》和 90 年代中后期的火焰纹章系列中就能见到该算法的应用。每当选中友方单位时，会提示该单位的可移动范围，这里只用 BFS 很容易就能做到。但如果该范围会受到地形影响，例如山地或森林会明显减小移动范围，那么 BFS 就显得力不从心了。对比《三国志5》我记忆中都不会有地形影响，部队穿越草地和森林是一样的移动范围。之前介绍的 BFS 和 DFS 都是处理无权图，而 Dijkstra 算法可以处理有权图。大量回合制 SLG 游戏中开始应用 Dijkstra 算法，明显丰富了关卡的设计，提高了可玩性。同时为了保证找到最短路径，算法的贪心策略是选择未被访问且离起点最近的节点，然后根据其邻居节点进行松弛操作，直到找到终点。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="路径算法之三 Dijkstra"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-path_Dijkstra" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_Dijkstra/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">路径算法之三 Dijkstra</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="迪杰斯特拉算法-Dijkstra"><a href="#迪杰斯特拉算法-Dijkstra" class="headerlink" title=" 迪杰斯特拉算法 Dijkstra "></a><center> 迪杰斯特拉算法 Dijkstra </center></h1><p>&emsp;&emsp;早年在《三国志英杰传》和 90 年代中后期的火焰纹章系列中就能见到该算法的应用。每当选中友方单位时，会提示该单位的可移动范围，这里只用 BFS 很容易就能做到。但如果该范围会受到地形影响，例如山地或森林会明显减小移动范围，那么 BFS 就显得力不从心了。对比《三国志5》我记忆中都不会有地形影响，部队穿越草地和森林是一样的移动范围。之前介绍的 BFS 和 DFS 都是处理无权图，而 Dijkstra 算法可以处理有权图。大量回合制 SLG 游戏中开始应用 Dijkstra 算法，明显丰富了关卡的设计，提高了可玩性。同时为了保证找到最短路径，算法的贪心策略是选择未被访问且离起点最近的节点，然后根据其邻居节点进行松弛操作，直到找到终点。<span id="more"></span>  </p>
+<p>&emsp;&emsp;算法核心：所有顶点分为 S 和 T 集合，分别记录已确定有最短路径的顶点和还未确定的顶点，每个节点同时记录起点到该节点的距离权重，如果不可达则权重为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∞</mi></mrow><annotation encoding="application/x-tex">\infty</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span>。循环获取 T 中最小权重的节点加入 S 中，根据该节点的邻居节点更新 T 中节点的权重。重复上述步骤，直到 S 中出现终点为止。算法实现时有3个关键点：1. 用一张 openlist 代替 T 集合，维护当前可到达的节点，不用记录权重 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∞</mi></mrow><annotation encoding="application/x-tex">\infty</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord">∞</span></span></span></span> 的节点，且记录起点到达节点的权重和前驱。2. 随后循环访问 openlist 中最小权重的节点，并标记已访问，即可确定起点到该节点的最短路径。3. 循环中处理节点的所有邻居节点时，需要作松弛，即邻居节点如果在 openlist 已存在，要比较新旧路径的权重作更新，保证最短路径。下面是算法的伪代码：  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">起始点加入 openlist，权重为 0</span><br><span class="line">while(openlist 不为空，如果为空说明无路径)</span><br><span class="line">&#123;</span><br><span class="line">    openlist 弹出最小权重节点，并标记已访问</span><br><span class="line">    如果当前节点为终点，返回找到路径</span><br><span class="line">    foreach (遍历该节点没有被访问过的邻居)</span><br><span class="line">    &#123;</span><br><span class="line">        如果邻居节点遇障碍物，则 continue 寻找下个邻居节点</span><br><span class="line">        如果邻居节点可通行</span><br><span class="line">        &#123;</span><br><span class="line">            设权重为当前节点的权重 + 该邻居节点权重</span><br><span class="line">            如果不在 openlist 中，则加入，前驱节点为当前节点，并记录权重</span><br><span class="line">            如果已存在 openlist 中，且权重更小，则修改前驱节点为当前节点，并修改权重</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;如果 While 循环中 openlist 空了，说明没有路径可达目的地。如果找到路径，需要从当前节点回溯。因为每个被访问节点都标记了前驱节点，所以很容易回溯到起点，即可得到一条完整的最短路径。其实，如果地图节点不带权重或权重全部相同，那么 Dijkstra 算法自然退化成 BFS 算法。  </p>
+<center>
+
+<p><img src="http://cdn.hoorayart.top/blog/img/pathsearching/Dijkstra.gif" title="Dijkstra"> <center>图中白色区域顶点权重为 1， 蓝色为 4， 黄色为 8</center></center></p>
+<p>&emsp;&emsp;对于 Dijkstra 算法的优化，像走格子的 SLG 不需要做松弛。之所以要松弛，是因为后面的节点可能会导致现有 openlist 中的节点出现更短的路径。而这类 SLG 所有路径选择的权重都不在边上，在顶点本身；或者说某个顶点的所有入边权重都是一样的。于是每个节点加入 openlist 中时，其权重值就一定是最小值，后面节点不可能再以更小的权重值到达该节点。但当 Dijkstra 算法配合 waypoint 时，这时就必须要进行松弛，后面谈到 waypoint 再作介绍。所以具体怎么应用还是看需求。另外 openlist 每次需要返回最小权重节点，因此最好用堆优化存储，可进一步提高效率。</p>
+<p>&emsp;&emsp;上述 Dijkstra 算法的缺陷是不会对已经确定的最短路径点做修改，所以无法解决负边权和带负边权环的问题，而 Bellman–Ford 及 SPFA 可以很好的解决负边权的问题和判断负权环，那么下一篇将开始介绍最佳优先搜索算法 Best-First Searching。(<span id="q01">游戏中极少应用负边权，而且 Dijkstra 算法已经有点性能压力了，需要配合 waypoint 之类，而 Bellman–Ford 会更吃性能，所以作为遗留问题</span>以后再添加了。)<br>&emsp;&emsp;<a href="#q01">遗留问题01</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a>, <a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>特效之二 彩带 | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="彩带 &amp;emsp;&amp;emsp;第一篇介绍了 VEG 的 4 个基本机构，Spawn、粒子初始化、粒子更新和粒子的渲染输出，展开 VEG 文件下两个 compute shader 分别对应粒子初始化和粒子更新，material 及其 shader 对应了输出渲染。这些组件基本能应付很多特效了，复杂点的就叠加多种粒子。但有些粒子系统依赖于其他粒子系统，例如当某种粒子死亡时，产生其他粒子。彩带就是最简单的通过 GPU Events 连接两套粒子系统的特效。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="特效之二 彩带"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-ribbonpack" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/ribbonpack/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">特效之二 彩带</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="彩带"><a href="#彩带" class="headerlink" title=" 彩带 "></a><center> 彩带 </center></h1><p>&emsp;&emsp;第一篇介绍了 VEG 的 4 个基本机构，Spawn、粒子初始化、粒子更新和粒子的渲染输出，展开 VEG 文件下两个 compute shader 分别对应粒子初始化和粒子更新，material 及其 shader 对应了输出渲染。这些组件基本能应付很多特效了，复杂点的就叠加多种粒子。但有些粒子系统依赖于其他粒子系统，例如当某种粒子死亡时，产生其他粒子。彩带就是最简单的通过 GPU Events 连接两套粒子系统的特效。 <span id="more"></span>  </p>
+<p>&emsp;&emsp;彩带特效有两套粒子系统，一是头部 Head，牵引着彩带移动；二是拖尾 Trail，彩带即跟随 Head 移动，也有自己的运动。Trail 要依赖于 Head 的运动，而正是通过 GPU Events 控制的。VEG 中自建有 Heads and Sparks 和 Heads and Trails 都可以创建带有 GPU Events 的特效，如果要单独创建 GPU Events，需要 Preferences 中把 Visual Effects 的 Experimental Operators&#x2F;Blocks 勾选上。下面我以 Unity 自带的范例并删减了很多细节处，用最少的组件完成特效，深入的细节可以自行打磨。另外范例用的 HDRP，我用的 URP，渲染有点差异外，且录屏码率不高，只做演示用。<br><img src="http://cdn.hoorayart.top/blog/img/ribbonpack/ribbonpack_setting.png"><center>彩带粒子特效的设置</center></p>
+<p>&emsp;&emsp;还是简单介绍下特效设置：</p>
+<ul>
+<li>Head 的 Spawn 是一个 20s 循环一次 burst，每次产生 3200 个粒子。</li>
+<li>Head 的粒子初始化 Capacity 也为 burst 的 3200。Bounds 设置了粒子系统的包围盒便于相机的剔除优化，因为在显卡中运行的，所以需要告诉相机剔除的包围盒。Set Velocity Random 随后设置了每个粒子速度值的随机大小范围，使得粒子四散开来。Set Position (Shape:Arc Sphere)，这里选择了球形表面随机位置发射粒子。Set Color Random From Gradient 针对每个粒子设置了随机颜色。Set Lifetime 最大值为 10s，后面 Trail 继承该值，所以也解释了上面 Spawn 的 20s 循环。</li>
+<li>粒子的更新中主要是 Turbulence 的设置，根据效果设置即可，等我更新完 Noise，就把湍流的设置详细捋一遍。另外还有个 Set Size over Life，曲线调节至生命周期最后 0.85 ~ 1.00 处迅速降为 0，保证末端缩小至消失。</li>
+<li>然后就是 Trigger Event Rate (Over Time)，这里的 Rate 表示每秒触发事件次数，保持和 Spawn 的设定一致，即发射粒子频率 “Trigger Event Rate: Spawn N Particles per second (or per distance travelled), based on a particle from a system.”。这里产生的粒子是组成彩带的粒子，不是彩带本身，彩带数量有前面 Head 粒子决定。所以想平滑的模拟需要调高该值，想要性能就调低。</li>
+<li>随后来到了 Trail 粒子系统，这里的 Capacity 限制了最大彩带条数，尽量设置个属性变量和 Head 中保持一致，避免资源浪费。Particles Per Strip Count 即每条彩带粒子数，可以理解为彩带长度。按之前的经验这时需要设定粒子的各种属性，如 Position&#x2F;Color&#x2F;Lifetime&#x2F;Size。因为依赖前面粒子的属性，所以通过 Get Source Attribute 去设置，或者直接继承 Inherit Source Attribute。因为最后输出的是 Quad，条带需要压缩 Scale.Y 至长条形。</li>
+<li>Trail 的更新也是一个 Turbulence，条带的扭动效果缓和，所以湍流的效果要弱很多。</li>
+<li>最后彩带的渲染输出，Inspector 面板中启用 Normal Bending 和Use Occlusion Map，在 Occlusion Map 选择默认的 Particle 纹理即可模拟彩带在光照下，从中心到两侧变暗的过程，看上去有点体积感。Base Color Map 因为继承了前面的色彩，所以这里也可不用设置。其他设置根据实际需求设置即可。</li>
+<li>Multiply Scale.Y over life，则是对彩带的粒子一头一尾，这样看着两头细中间粗更漂亮点。</li>
+<li>Camera Fade (Alpha) 是优化设置，因为离摄像机太近的粒子逐渐消失掉。</li>
+</ul>
+<p>&emsp;&emsp;这套 Head + Trail 的组合可以很好模拟带拖尾的投射物，如光球、火箭、闪电箭等等。另外本文主要的关注点是 GPU Events 的应用，连接不同又有依赖关系的粒子系统，如气泡粒子随机飘散，然后破裂溅射出新的粒子之类。VEG 的基础使用也搞定了，下篇总结完 Noise 算法把 Turbulence 搞定和制作点复杂的特效。</p>
+<div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/img/ribbonpack/ribbonpack.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_ribbonpack/ribbonpack.mp4" type="video/mp4">
+</videos>
+</div>
+
+
+
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a>, <a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

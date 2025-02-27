@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>特效之三 火焰 | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="火焰 &amp;emsp;&amp;emsp;火焰是游戏中最常用的特效之一，不同形态，不同颜色，不同风格在游戏中有不同表现，既可以做蜡烛、火把、篝火取暖照明，也可以做火球、火墙等等法术，还可以做 Flamethrower（以后再触发关键字无法更新，就切到 github 上，太浪费时间排查了）、机关陷阱等等装置。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="特效之三 火焰"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-fire" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/fire/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">特效之三 火焰</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="火焰"><a href="#火焰" class="headerlink" title=" 火焰 "></a><center> 火焰 </center></h1><p>&emsp;&emsp;火焰是游戏中最常用的特效之一，不同形态，不同颜色，不同风格在游戏中有不同表现，既可以做蜡烛、火把、篝火取暖照明，也可以做火球、火墙等等法术，还可以做 Flamethrower（以后再触发关键字无法更新，就切到 github 上，太浪费时间排查了）、机关陷阱等等装置。<span id="more"></span>  </p>
+<p>&emsp;&emsp;前面做篝火的时候就介绍了火焰特效基本构造，火苗动画帧 + 火星 + 烟雾等等点缀。通过不同的火苗形态和不同 VEG 设置即可创造出各种类型的火焰。  </p>
+<div>
+<video id="video" controls="" preload="none" poster="http://cdn.hoorayart.top/blog/img/fire/fire_movie.jpg"><source id="mp4" src="http://cdn.hoorayart.top/blog/video/vfx_fire/fire.mp4" type="video/mp4">
+</videos>
+</div>
+
+<p>&emsp;&emsp;上述演示的火焰特效除了最后 3 个都是序列帧，而且外焰反应剧烈，可燃物急速耗尽造成形态上的不规律变化，所以序列帧必须要足够多才能表现及格。下面是像素版的单个火苗，我用了 8 帧（忘记照着谁画的了），看上去还不错但也有很明显的规律。如果要表现出真实的火焰，帧数至少要比像素风格提升一个数量级。再下面是 Unity 系统自带的一个火焰粒子特效，用了 100 帧，为了防止单调，还要叠加 2、3 个火苗。虽然效果很不错，但如果有内存压力的平台，可以想办法用 shader 生成火焰，即用性能换空间。<br><img src="http://cdn.hoorayart.top/blog/img/fire/Torch.gif"><center>像素版只有一根火苗的火把</center></p>
+<p><img src="http://cdn.hoorayart.top/blog/img/fire/Flames.png"><center>Unity 自带火焰粒子特效序列帧</center></p>
+<p>&emsp;&emsp;在<a target="_blank" rel="noopener" href="https://hearray.gitee.io/blog/2023/02/19/fire&smoke/#more">篝火</a>中，总结了火焰至少要表现出內焰和外焰的关系。所以最简单的思路就是用噪声做多变的外焰，用相对稳定的结构表达內焰，二者混合即可。<br><img src="http://cdn.hoorayart.top/blog/img/fire/FlameSetting.png"></p>
+<ul>
+<li>最上面为火焰基本结构，我从上到下做了水滴型、波峰和圆形三种图形。图中只应用了水滴型。</li>
+<li>左下角的外焰通过时间作 uv 偏移，结合噪声值产生火焰向上的流动效果。同时根据火焰特点，应用梯度让上层扰动大，下层扰动小。Remap 到 [-1, 1] 好和基本结构直接混合。</li>
+<li>右下角直接叠加上面两者，同时应用给梯度让顶部残留的火焰逐渐消失，最后提高亮度和着色即可。不一定要用 Gamma 矫正，还有其他方式提高亮度。</li>
+<li>FlameSpeed：火苗移动速度。</li>
+<li>DistortOffset：不同的火苗，不同uv偏移，这里只有一个粒子，所以没用上，但暴露给 VEG 使用。</li>
+<li>Color 即火焰 HDR 颜色。如果是卡通渲染，准备外焰、內焰和高光三种颜色。</li>
+</ul>
+<p>&emsp;&emsp;VEG 也是最简设置，1 个无生命周期的粒子演示即可：<br><img src="http://cdn.hoorayart.top/blog/img/fire/FlameVEGSetting.png"></p>
+<p>&emsp;&emsp;优化点：</p>
+<ul>
+<li>Unity 自带的 Simple Noise 文档中是用 Value Noise + FBM 实现，其实很耗性能。所以噪声图用提前生成的。  </li>
+<li>基本结构多种多样的，但计算量相对复杂，每帧都是重复计算，而且不直观，对美工不太友好，直接提供一张低分辨率纹理即可。</li>
+<li>提供一个 uv 偏移坐标，能更好控制火苗生成。比如基本结构只要半圆，不需要重新生成半圆图，直接作 uv 偏移即可。</li>
+<li>设置中应用了几次 pow，可以优化。</li>
+<li>如果不用预先生成的噪声图，那么自带噪声节点参数要暴露出来。</li>
+</ul>
+<p>&emsp;&emsp;上面视频中最后三个火焰依次是纯 shader 生成火焰、使用了一张火苗形态图和噪声图、纯 shader 生成卡通渲染的火苗。水滴形曲线方程网上很多，随便选了一个如下：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><msup><mo stretchy="false">)</mo><mn>2</mn></msup><mo>−</mo><mn>2</mn><mi>x</mi><mo stretchy="false">(</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo>+</mo><mn>3</mn><msup><mi>y</mi><mn>2</mn></msup><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">(x^2+y^2)^2-2x(x^2+y^2)+3y^2=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord">2</span><span class="mord mathnormal">x</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0585em;vertical-align:-0.1944em;"></span><span class="mord">3</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span></span>
+<p><img src="http://cdn.hoorayart.top/blog/img/fire/blob_curve.png"></p>
+<p>&emsp;&emsp;这只是最简通过代码生成火焰，而火星烟雾等点缀并未添加，也没有做火苗的左右摆动，可根据需求扩展即可。好了，VEG 的火焰特效库算初步搞定，以后慢慢补充完善。  </p>
+<p>&emsp;&emsp;最后吐槽下本来这篇是做溶解消散特效的，但我看原来写博客的时候，发现其中有一类需求是在溶解边缘飞散出粒子，需要用到几何着色器。而 VEG 只支持自定义 Shader Graph。无奈 Shader Graph 又不熟悉，所以暂时先把火焰这种简单的先整理了。VEG&#x2F;SG 用着方便，但对于稍微复杂点的特效，一堆运算节点可读性差，尽管可以做 sub-graph。UE4 也是，有些点进去像进了几千年没人打扫的盘丝洞，还只有盘丝没有洞。如果上项目，后续的维护优化都会让人感到头晕不适，所以目前对于复杂的特效还只适合演示。  </p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a>, <a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

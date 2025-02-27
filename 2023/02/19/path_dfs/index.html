@@ -1,0 +1,194 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>路径算法之二 DFS | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="深度优先搜索 DFS &amp;emsp;&amp;emsp;DFS 即深度优先搜索 Depth-First Searching。算法核心：借用栈存储当前可访问的节点，然后循环访问队列中的节点，判断该节点的相邻节点是否为目的地。若不是，如果邻居节点有阻碍不可访问，则继续判断下个邻居节点的可行性，如果邻居节点可访问则入队列，并重新开始循环。若该点的所有邻居节点都不可行，则说明是死路，需要后退再尝试，即栈顶节点出栈。直到找到目标节点或队列为空。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="路径算法之二 DFS"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-path_dfs" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_dfs/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">路径算法之二 DFS</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="深度优先搜索-DFS"><a href="#深度优先搜索-DFS" class="headerlink" title=" 深度优先搜索 DFS "></a><center> 深度优先搜索 DFS </center></h1><p>&emsp;&emsp;DFS 即深度优先搜索 Depth-First Searching。算法核心：借用栈存储当前可访问的节点，然后循环访问队列中的节点，判断该节点的相邻节点是否为目的地。若不是，如果邻居节点有阻碍不可访问，则继续判断下个邻居节点的可行性，如果邻居节点可访问则入队列，并重新开始循环。若该点的所有邻居节点都不可行，则说明是死路，需要后退再尝试，即栈顶节点出栈。直到找到目标节点或队列为空。<span id="more"></span>下面是算法的伪代码：  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">起始点入栈，并标记访问</span><br><span class="line">while(栈不为空，如果为空说明无路径)</span><br><span class="line">&#123;</span><br><span class="line">    foreach (遍历栈顶节点没有被访问过的邻居，4、6、8方向都行)</span><br><span class="line">    &#123;</span><br><span class="line">        如果邻居节点是目标节点，返回找到路径</span><br><span class="line">        如果邻居节点遇障碍物，则 continue 寻找下个邻居节点</span><br><span class="line">        如果邻居节点可通行</span><br><span class="line">        &#123;</span><br><span class="line">          该邻居节点入栈，并标记访问</span><br><span class="line">          break 只要有一个邻居节点能通行即可</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    如果没有一个邻居节点可行则出栈</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<center>
+
+<p><img src="http://cdn.hoorayart.top/blog/img/pathsearching/dfs.gif" title="DFS"> </center></p>
+<p>&emsp;&emsp;如果 While 循环中栈空了，说明没有路径可达目的地。如果找到路径，栈中保存的节点即是一条完整路径。DFS 显然不是最短路径搜索，而且看起来很“丑陋”。但实际在游戏中很多玩家走经典迷宫就是潜移默化地应用了 DFS 的思维，靠着一边走到底，根本不用担心迷路。以前玩仙剑和一些日系 RPG 都屡试不爽。当然仙三和问情篇例外，简直就是灾难级的迷宫设计，有时触发什么镜头转向，有时场景旋转后还黑屏一下重置相机。。。  </p>
+<p>&emsp;&emsp;DFS 和 BFS 一样都是漫无目的式地搜索，像无头苍蝇瞎闯碰运气。由于寻路前已知晓起点和终点的信息，在路径搜索时，可指定贪心策略，优先选择出可能的最佳路径。这样多数时候能避免大量无用节点的访问。不同的贪心策略有不同的结果，与 BFS 结合有 Best-First Search 和 A* 等，与 DFS 结合有 IDA* 等，有些能找出最短路径，有些不能保证最短。又因为性能要求和路径上可能会有实时变化，于是出现 A* 和 D* 算法的各种优化和变种。如果还想更进一步提高效率，又不在意最短路径，那么基于采样的搜索算法更合适。说了这么多下面一篇还是继续介绍漫无目的式地搜索 Dijkstra 算法。   </p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a>, <a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>

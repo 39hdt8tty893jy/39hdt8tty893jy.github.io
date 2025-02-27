@@ -1,0 +1,313 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>路径算法之五 A* | Hooray Blog</title>
+  <meta name="author" content="Hooray Powered by hexo and Theme by John Doe">
+  
+  <meta name="description" content="A* 搜索算法 &amp;emsp;&amp;emsp;通过前文可以清楚了解，Dijkstra 算法的贪心策略是每次找出离起点最近的节点，优点在于能找到最优路径且能处理权重图，但是速度慢；Best-First searching 的贪心策略是每次找出离终点最近的节点，优点在于更快向终点靠近，搜索效率上去了但不是最优路径。二者取其长便是经典的 A* 算法。">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="路径算法之五 A*"/>
+  <meta property="og:site_name" content="Hooray Blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link rel="shortcut icon" href="/blog/favicon.png">
+  
+  
+<link rel="stylesheet" href="/blog/css/style.css">
+
+  <!--[if lt IE 9]><script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script><![endif]-->
+  
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/blog/">Hooray Blog</a></h1>
+  <h2><a href="/blog/"></a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/blog/null">Home</a></li>
+    
+      <li><a href="/blog/archives">Archives</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div>
+</header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article id="post-path_Astar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/blog/2023/02/19/path_Astar/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="p-name title" itemprop="headline name">路径算法之五 A*</h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="A-搜索算法"><a href="#A-搜索算法" class="headerlink" title=" A* 搜索算法 "></a><center> A* 搜索算法 </center></h1><p>&emsp;&emsp;通过前文可以清楚了解，Dijkstra 算法的贪心策略是每次找出离起点最近的节点，优点在于能找到最优路径且能处理权重图，但是速度慢；Best-First searching 的贪心策略是每次找出离终点最近的节点，优点在于更快向终点靠近，搜索效率上去了但不是最优路径。二者取其长便是经典的 A* 算法。<span id="more"></span>  </p>
+<p>&emsp;&emsp;贪心策略设为 F，Dijkstra 算法记录起点到各个节点的路径最小权重 G，并通过松弛保证节点的 G 一定是最小，策略为 F &#x3D; G。每次策略选择最小 F，即最小 G。而 Best-First searching 预估了节点到终点的权重 H（那篇有详细介绍 H 计算的几种方式），策略为 F &#x3D; H，每次选择最小 F，即最小 H。A* 算法的贪心策略便是 F &#x3D; G + H，每次选择最小 F，配合松弛操作，便兼顾了两者的优点。下图演示 A* 算法搜索流程，其中蓝色方块为起点，红色方框为终点，前驱用绿色短线表示，预估函数用曼哈顿距离计算：  </p>
+<style>
+    #CellFrame {width:100%;height:300px;line-height:20px;border: 0px solid red;display:flex;justify-content:center;align-items:center;}
+    #CellImg {width:auto;float:left;margin-right:20px;}
+    #CellText {float:left;width:50%;}
+</style>
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/01.png" id="CellImg"/> 
+    <div id="CellText">step-01 将起点入 openlist，计算得到 (G, H, F) = (0, 9, 9)</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/02.png" id="CellImg"/> 
+    <div id="CellText">step-02 openlist 中选取 F 值最小的节点（即起点），并标记已访问，随后分别计算 4 个邻居节点并加入openlist，用青色方框表示表中的节点。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/03.png" id="CellImg"/> 
+    <div id="CellText">step-03 上一步中有两个 F = 9 都是最小值节点，都可以选择，和排序算法有关。我这里多演示点步骤，所以选择了右侧的节点。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/04.png" id="CellImg"/> 
+    <div id="CellText">step-04 上一步中有三个 F = 9 都是最小值节点，我继续选择右侧节点。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/05.png" id="CellImg"/> 
+    <div id="CellText">step-05 上一步中有四个 F = 9 都是最小值节点，我继续选择右侧节点。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/06.png" id="CellImg"/> 
+    <div id="CellText">step-06 上一步中有五个 F = 9 都是最小值节点，我继续选择右侧节点。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/07.png" id="CellImg"/> 
+    <div id="CellText">step-07 上一步中有五个 F = 9 都是最小值节点，我选择右下节点，这时发现其中一个邻居已经在 openlist 中，计算 G 值小于原来表中 G 值，所以不用更新。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/08.png" id="CellImg"/> 
+    <div id="CellText">step-08 上一步中有四个 F = 9 都是最小值节点，我选择 (4, 5, 9) 节点，openlist 中节点依然不用更新。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/09.png" id="CellImg"/> 
+    <div id="CellText">step-09 上一步中有三个 F = 9 都是最小值节点，我选择 (3, 6, 9) 节点，openlist 中节点依然不用更新。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/10.png" id="CellImg"/> 
+    <div id="CellText">step-10 上一步中有二个 F = 9 都是最小值节点，我选择 (2, 7, 9) 节点，openlist 中节点依然不用更新，加入下侧新节点 (3, 6, 9)。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/11.png" id="CellImg"/> 
+    <div id="CellText">step-11 上一步中有二个 F = 9 都是最小值节点，我选择 (3, 6, 9) 节点，openlist 中节点依然不用更新，加入 2 个新节点。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/12.png" id="CellImg"/> 
+    <div id="CellText">step-12 上一步中有二个 F = 9 都是最小值节点，我选择 (1, 8, 9) 节点演示下松弛操作，并修改 openlist 中节点的权重和前驱。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/13.png" id="CellImg"/> 
+    <div id="CellText">step-13 同理选择 F 最小值节点</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/14.png" id="CellImg"/> 
+    <div id="CellText">step-14 同理选择 F 最小值节点</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/15.png" id="CellImg"/> 
+    <div id="CellText">step-15 同理选择 F 最小值节点</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/16.png" id="CellImg"/> 
+    <div id="CellText">step-16 同理选择 F 最小值节点</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/17.png" id="CellImg"/> 
+    <div id="CellText">step-17 同理选择 F 最小值节点，这时终点加入 openlist，切记还不能返回找到路径</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/18.png" id="CellImg"/> 
+    <div id="CellText">step-18 上一步中 openlist 中有两个 F = 9 的最小值节点，如果选择终点，则发现路径；这里多演示几步，选择了另外的节点，并更新了节点权重和前驱。</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/19.png" id="CellImg"/> 
+    <div id="CellText">step-19 同理选择 F 最小值节点，仍然选择非终点作演示</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/20.png" id="CellImg"/> 
+    <div id="CellText">step-20 选择 F = 9 最小值节点，即终点，所以返回找到路径</div>
+</div>
+
+<div id="CellFrame">
+    <img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/21.png" id="CellImg"/> 
+    <div id="CellText">step-21 按照节点前驱回溯，即可找到最优路径</div>
+</div>
+
+<p>&emsp;&emsp;上述 A* 算法贪心策略中看到 H 进入了策略选择，所以可以优先考虑离终点近的节点，即最佳优先搜索的特点。需要注意的是怎么保证是最优路径的？Dijkstra 算法是通过松弛，A* 也做松弛就够吗？答案是不够的，因为策略引入了预估函数 H，当 H 值小于等于节点到终点真实权重时，A* 算法才能保证最优路径。证明如下：  </p>
+<ul>
+<li>令 F(n) &#x3D; G(n) + H(n) 和 F*(n) &#x3D; G(n) + H*(n)，其中 H(n) 预估 n 到终点的权重值，H*(n) 是实际 n 到终点的权重值。  </li>
+<li>设节点 p 为终点，当 F(p) 为集合 {F(n)} 中最小值时，即找到最优路径。这时 H(p) &#x3D; H*(p) &#x3D; 0，F(p) &#x3D; F*(p) &#x3D; G(p)。  </li>
+<li>如果存在其他可能的最优路径，那么一定通过不在上述的最优路径中的节点 q，使得 F*(q) &lt;&#x3D; F*(p) &#x3D; F(p)  </li>
+<li>因为 H(n) &lt;&#x3D; H*(n)，则 F(n) &lt;&#x3D; F*(n)，F(q) &lt;&#x3D; F*(q)。又有 F(p) &#x3D; min{F(n)} &lt;&#x3D; F(q)，所以 F(p) &lt;&#x3D; F(q) &lt;&#x3D; F*(q)。结合上一步得到 F(p) &#x3D; F*(q)，即就算有另外的最优路径，也和之前得到的路径权重值相等，不可能存在更小权重值的路径。</li>
+</ul>
+<p>&emsp;&emsp;算法核心：1. 用一张 openlist 存储当前可到达的节点，同时记录有起点到节点的最小权重 G 和节点到终点的预估权重 H，并记录 F 及前驱。2. 随后循环访问 openlist 中 F 最小权重的节点，标记已访问，并处理节点的所有未被访问的邻居节点，重新计算 G、H、F，加入或松弛更新 openlist，直到找到终点。下面是算法的伪代码：  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">起始点加入 openlist，记录 G = 0, H = H(startPoint), F = H(startPoint)</span><br><span class="line">while(openlist 不为空，如果为空说明无路径)</span><br><span class="line">&#123;</span><br><span class="line">    openlist 弹出 F 最小权重节点，标记已访问</span><br><span class="line">    如果当前节点为终点，返回找到路径</span><br><span class="line">    foreach (遍历该节点没有被访问过的邻居)</span><br><span class="line">    &#123;</span><br><span class="line">        如果邻居节点遇障碍物，则 continue 寻找下个邻居节点</span><br><span class="line">        如果邻居节点可通行，重新计算 G、H、F // 这里可以优化先只算 G</span><br><span class="line">        &#123;</span><br><span class="line">            if (邻居节点不在 openlist 中) 则加入 openlist 中</span><br><span class="line">            elif (有更小的 G 值) 则更新权重及前驱</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>&emsp;&emsp;如果 While 循环中 openlist 空了，说明没有路径可达目的地。如果找到路径，需要从当前节点回溯。因为每个被访问节点都标记了前驱节点，所以很容易回溯到起点，即可得到一条完整的最优路径。  </p>
+<p><img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/Astar.gif#pic_center" title="A*"><br><img src="http://cdn.hoorayart.top/blog/img/pathsearching/Astar/AstarWeight.gif#pic_center" title="A* with cost"></p>
+<p>&emsp;&emsp;对于 A* 的优化，和 Dijkstra 算法一样， openlist 每次需要返回最小权重节点，因此最好用堆优化存储，可提高效率。另外预估函数用简单的，不要用欧氏距离。从起点和终点作双向 A* 寻路，就像 BFS 中演示，有时可以减少无效节点的访问，有时不能，不推荐。</p>
+<p>&emsp;&emsp;经典的 A* 算法介绍完了，下面几篇都是针对不同应用的 A* 变种。</p>
+<p>&emsp;&emsp;参考文章:<br>&emsp;&emsp;<a target="_blank" rel="noopener" href="https://www.gamedev.net/reference/articles/article2003.asp">A* Pathfinding for Beginners</a>  </p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a>, <a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a>
+  </div>
+
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="Search">
+    <input type="hidden" name="as_sitesearch" value="39hdt8tty893jy.github.io/blog">
+  </form>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Categories</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E5%9B%BE%E5%83%8F/">图像</a><small>1</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%9B%BE%E5%BD%A2/">图形</a><small>5</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/%E6%95%B0%E5%AD%A6/">数学</a><small>2</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+    <li><a href="/blog/categories/%E7%AE%97%E6%B3%95/">算法</a><small>13</small></li>
+  
+    <li><a href="/blog/categories/%E7%89%B9%E6%95%88/%E7%B2%92%E5%AD%90/">粒子</a><small>3</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tag">
+  <h3 class="title">Tags</h3>
+  <ul class="entry">
+  
+    <li><a href="/blog/tags/%E5%99%AA%E5%A3%B0/">噪声</a><small>1</small></li>
+  
+    <li><a href="/blog/tags/%E5%9B%BE%E5%BD%A2/">图形</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E5%AF%BB%E8%B7%AF/">寻路</a><small>6</small></li>
+  
+    <li><a href="/blog/tags/%E7%89%B9%E6%95%88/">特效</a><small>4</small></li>
+  
+  </ul>
+</div>
+
+
+  
+  <div class="widget widget-archives">
+    <h3 class="title">Archives</h3>
+    <div class="entry">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2023/02/">February 2023</a><span class="archive-list-count">17</span></li></ul>
+    </div>
+  </div>
+
+
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2025 Hooray Powered by hexo and Theme by John Doe
+  
+</div>
+<div class="clearfix"></div></footer>
+  
+<script src="/blog/js/jquery-3.4.1.min.js"></script>
+
+
+<script src="/blog/js/jquery.imagesloaded.min.js"></script>
+
+
+<script src="/blog/js/gallery.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+
+
+<script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+<script>
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+</body>
+</html>
