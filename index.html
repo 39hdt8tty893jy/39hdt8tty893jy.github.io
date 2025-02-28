@@ -121,6 +121,42 @@
 
 
 
+  <article id="post-gaussianblur" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/gaussianblur/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2023/02/19/gaussianblur/">高斯模糊</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="高斯模糊的几种常用算法总结"><a href="#高斯模糊的几种常用算法总结" class="headerlink" title=" 高斯模糊的几种常用算法总结 "></a><center> 高斯模糊的几种常用算法总结 </center></h1><p>&emsp;&emsp;高斯模糊是原始图像与正态分布的概率密度函数做卷积运算。因为像素点的分布离散有界，所以通常由正态分布的二维模板作为原始图像的卷积核，其中卷积核必须归一化处理。每个模糊像素值的计算都是周围相邻像素值与滤波模板的卷积。正态分布公式中的标准差 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 决定模糊程度，当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越大，曲线越平滑，权重值分布值越分散，即越模糊；当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越小，曲线越陡峭，权重值分布越集中，模糊程度越小。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2023/02/19/gaussianblur/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-holographic" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -301,66 +337,30 @@
 
 
 
-  <article id="post-path_Astar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <article id="post-noise" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
     <header>
       
         <div class="icon"></div>
-        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/path_Astar/">2023-02-19</a></time>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/noise/">2023-02-19</a></time>
       
       
   
-    <h1 class="title"><a href="/2023/02/19/path_Astar/">路径算法之五 A*</a></h1>
+    <h1 class="title"><a href="/2023/02/19/noise/">噪声之一</a></h1>
   
 
     </header>
     <div class="e-content entry" itemprop="articleBody">
       
-        <h1 id="A-搜索算法"><a href="#A-搜索算法" class="headerlink" title=" A* 搜索算法 "></a><center> A* 搜索算法 </center></h1><p>&emsp;&emsp;通过前文可以清楚了解，Dijkstra 算法的贪心策略是每次找出离起点最近的节点，优点在于能找到最优路径且能处理权重图，但是速度慢；Best-First searching 的贪心策略是每次找出离终点最近的节点，优点在于更快向终点靠近，搜索效率上去了但不是最优路径。二者取其长便是经典的 A* 算法。
+        <h1 id="游戏开发中常用的噪声算法之一"><a href="#游戏开发中常用的噪声算法之一" class="headerlink" title=" 游戏开发中常用的噪声算法之一 "></a><center> 游戏开发中常用的噪声算法之一 </center></h1><p>&emsp;&emsp;噪声简单来讲就是随机数。通常在计算机中模拟现实画面时，会应用到噪声，让简单又机械又呆板的画面更有真实感，如平整的大地有了起伏，水面有了波浪，粒子运行也不会显得千篇一律，火焰、溶解等特效也变得合理。不同的噪声有不同的表现，下面主要介绍游戏中相关的图形噪声。
       
     </div>
     <footer>
       
         
           <div class="alignleft">
-            <a href="/2023/02/19/path_Astar/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article id="post-gaussianblur" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/gaussianblur/">2023-02-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2023/02/19/gaussianblur/">高斯模糊</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <h1 id="高斯模糊的几种常用算法总结"><a href="#高斯模糊的几种常用算法总结" class="headerlink" title=" 高斯模糊的几种常用算法总结 "></a><center> 高斯模糊的几种常用算法总结 </center></h1><p>&emsp;&emsp;高斯模糊是原始图像与正态分布的概率密度函数做卷积运算。因为像素点的分布离散有界，所以通常由正态分布的二维模板作为原始图像的卷积核，其中卷积核必须归一化处理。每个模糊像素值的计算都是周围相邻像素值与滤波模板的卷积。正态分布公式中的标准差 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 决定模糊程度，当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越大，曲线越平滑，权重值分布值越分散，即越模糊；当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越小，曲线越陡峭，权重值分布越集中，模糊程度越小。
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2023/02/19/gaussianblur/#more" class="more-link">Read More</a>
+            <a href="/2023/02/19/noise/#more" class="more-link">Read More</a>
           </div>
         
         
