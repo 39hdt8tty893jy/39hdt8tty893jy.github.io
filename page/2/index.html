@@ -121,78 +121,6 @@
 
 
 
-  <article id="post-path_LPAstar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/path_LPAstar/">2023-02-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2023/02/19/path_LPAstar/">路径算法之六 Lifelong Planning A*</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <h1 id="Lifelong-Planning-A-搜索算法"><a href="#Lifelong-Planning-A-搜索算法" class="headerlink" title=" Lifelong Planning A* 搜索算法 "></a><center> Lifelong Planning A* 搜索算法 </center></h1><p>&emsp;&emsp;Bioware 的无限引擎 Infinity Engine 在 2000 年前后制作过几款经典 2D RPG（博德之门&#x2F;冰风谷&#x2F;异域镇魂曲），但游戏时无一例外地在寻路上存在一个明显的问题。每次以鼠标右键控制角色移动时会开始寻路，随后角色按照路径移动。但这时地图道路狭窄，同时其他同伴或者 NPC 或者怪物也会移动，如果挡住了前进的路，角色会停下来试图保持原路径挤过去，努力扭了大概 2、3 秒后还是杵在原地就会重新寻路。这样偶尔就会发现其中某个角色不知不觉就绕了大半圈，而原来的路径早已经通畅可行。大概原因就是没有动态寻路，只是等一段时间后发现还杵在原地再做寻路。如果游戏中应用 A* 算法，那么路径中出现阻碍或者有新的路径成本，只能重新再做一遍 A* 搜索。因为地图上的变动通常只影响小部分的节点，之前的搜索时建立了大量的节点信息，如果重新做一遍 A* 很浪费资源。节点变动如果还频繁，多次重新 A* 寻路浪费更大。Lifelong Planning A* 就是依赖于之前已经做过的搜索信息再寻路。
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2023/02/19/path_LPAstar/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
-  <article id="post-outline" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  
-  <div class="post-content">
-    <header>
-      
-        <div class="icon"></div>
-        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/outline/">2023-02-19</a></time>
-      
-      
-  
-    <h1 class="title"><a href="/2023/02/19/outline/">轮廓线 Outline</a></h1>
-  
-
-    </header>
-    <div class="e-content entry" itemprop="articleBody">
-      
-        <h1 id="轮廓线-Outline"><a href="#轮廓线-Outline" class="headerlink" title=" 轮廓线 Outline "></a><center> 轮廓线 Outline </center></h1><p>&emsp;&emsp;轮廓线在传统游戏中很常见，通常表示指向或选定的单位，标识被建筑或地形遮挡的单位。而卡通渲染中，不仅要勾勒外轮廓，还要在内部勾线表现其结构。对于赛璐璐风格的作品，线条是非常重要的，既要求粗细虚实，又要手绘、水墨等各种风格化，在黑白漫画中要求更甚。所以轮廓线在 NPR 中有着不可忽略的重要性，而且也应该由美术主导，给与美术更多的线条控制。
-      
-    </div>
-    <footer>
-      
-        
-          <div class="alignleft">
-            <a href="/2023/02/19/outline/#more" class="more-link">Read More</a>
-          </div>
-        
-        
-      
-      <div class="clearfix"></div>
-    </footer>
-  </div>
-</article>
-
-
-
-
   <article id="post-path_bfs" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -265,6 +193,42 @@
 
 
 
+  <article id="post-path_LPAstar" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/path_LPAstar/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2023/02/19/path_LPAstar/">路径算法之六 Lifelong Planning A*</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="Lifelong-Planning-A-搜索算法"><a href="#Lifelong-Planning-A-搜索算法" class="headerlink" title=" Lifelong Planning A* 搜索算法 "></a><center> Lifelong Planning A* 搜索算法 </center></h1><p>&emsp;&emsp;Bioware 的无限引擎 Infinity Engine 在 2000 年前后制作过几款经典 2D RPG（博德之门&#x2F;冰风谷&#x2F;异域镇魂曲），但游戏时无一例外地在寻路上存在一个明显的问题。每次以鼠标右键控制角色移动时会开始寻路，随后角色按照路径移动。但这时地图道路狭窄，同时其他同伴或者 NPC 或者怪物也会移动，如果挡住了前进的路，角色会停下来试图保持原路径挤过去，努力扭了大概 2、3 秒后还是杵在原地就会重新寻路。这样偶尔就会发现其中某个角色不知不觉就绕了大半圈，而原来的路径早已经通畅可行。大概原因就是没有动态寻路，只是等一段时间后发现还杵在原地再做寻路。如果游戏中应用 A* 算法，那么路径中出现阻碍或者有新的路径成本，只能重新再做一遍 A* 搜索。因为地图上的变动通常只影响小部分的节点，之前的搜索时建立了大量的节点信息，如果重新做一遍 A* 很浪费资源。节点变动如果还频繁，多次重新 A* 寻路浪费更大。Lifelong Planning A* 就是依赖于之前已经做过的搜索信息再寻路。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2023/02/19/path_LPAstar/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
   <article id="post-ribbonpack" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   
   <div class="post-content">
@@ -289,6 +253,42 @@
         
           <div class="alignleft">
             <a href="/2023/02/19/ribbonpack/#more" class="more-link">Read More</a>
+          </div>
+        
+        
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+
+
+  <article id="post-gaussianblur" class="h-entry post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time class="dt-published" datetime="2023-02-19T06:13:51.000Z"><a href="/2023/02/19/gaussianblur/">2023-02-19</a></time>
+      
+      
+  
+    <h1 class="title"><a href="/2023/02/19/gaussianblur/">高斯模糊</a></h1>
+  
+
+    </header>
+    <div class="e-content entry" itemprop="articleBody">
+      
+        <h1 id="高斯模糊的几种常用算法总结"><a href="#高斯模糊的几种常用算法总结" class="headerlink" title=" 高斯模糊的几种常用算法总结 "></a><center> 高斯模糊的几种常用算法总结 </center></h1><p>&emsp;&emsp;高斯模糊是原始图像与正态分布的概率密度函数做卷积运算。因为像素点的分布离散有界，所以通常由正态分布的二维模板作为原始图像的卷积核，其中卷积核必须归一化处理。每个模糊像素值的计算都是周围相邻像素值与滤波模板的卷积。正态分布公式中的标准差 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 决定模糊程度，当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越大，曲线越平滑，权重值分布值越分散，即越模糊；当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi></mrow><annotation encoding="application/x-tex">\sigma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">σ</span></span></span></span> 越小，曲线越陡峭，权重值分布越集中，模糊程度越小。
+      
+    </div>
+    <footer>
+      
+        
+          <div class="alignleft">
+            <a href="/2023/02/19/gaussianblur/#more" class="more-link">Read More</a>
           </div>
         
         
